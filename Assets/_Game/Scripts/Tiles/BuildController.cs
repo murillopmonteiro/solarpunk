@@ -1,4 +1,5 @@
-using Solarpunk.Core;
+using System;
+using System.Collections.Generic;
 using Solarpunk.Grid;
 using Solarpunk.Managers;
 using UnityEngine;
@@ -6,79 +7,56 @@ using UnityEngine;
 namespace Solarpunk.Tiles
 {
     /// <summary>
-    /// Temporary input layer standing in for a real build UI: number keys
-    /// 1-9 and 0 select a tile from <see cref="palette"/>, left-click a hex
-    /// to place it. Only one City tile is allowed per match (it grows via
-    /// <see cref="CityGrowth"/> instead of being rebuilt).
+    /// Validates and executes construction. Driven by the build panel UI —
+    /// it holds no input logic of its own.
     /// </summary>
     public class BuildController : MonoBehaviour
     {
-        [SerializeField] private Camera worldCamera;
         [SerializeField] private ResourceManager resourceManager;
-        [SerializeField] private TileDefinition[] palette;
+        [SerializeField] private List<TileDefinition> palette = new();
 
-        private static readonly KeyCode[] SelectKeys =
-        {
-            KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Alpha5,
-            KeyCode.Alpha6, KeyCode.Alpha7, KeyCode.Alpha8, KeyCode.Alpha9, KeyCode.Alpha0
-        };
+        /// <summary>Fraction of the build cost returned when demolishing.</summary>
+        [SerializeField, Range(0f, 1f)] private float refundRate = 0.5f;
 
-        private int _selectedIndex;
+        public IReadOnlyList<TileDefinition> Palette => palette;
+
+        public event Action OnBoardChanged;
+
         private HexCell _cityCell;
 
-        private void Update()
-        {
-            for (int i = 0; i < SelectKeys.Length && i < palette.Length; i++)
-            {
-                if (Input.GetKeyDown(SelectKeys[i]))
-                {
-                    _selectedIndex = i;
-                    Debug.Log($"Selected tile: {palette[_selectedIndex].displayName}");
-                }
-            }
+        public bool CityAlreadyBuilt => _cityCell != null;
 
-            if (Input.GetMouseButtonDown(0))
-            {
-                TryBuildAtMouse();
-            }
+        /// <summary>Why a given tile can't go on a given hex — null when it can.</summary>
+        public string BlockReason(HexCell cell, TileDefinition definition)
+        {
+            if (cell == null || definition == null) return "No tile selected";
+            if (!cell.IsEmpty) return "Hex occupied";
+
+            if (definition.category == TileCategory.City && CityAlreadyBuilt)
+                return "City already founded";
+
+            if (definition.requiredRelief != TerrainRelief.Mutable && definition.requiredRelief != cell.relief)
+                return $"Needs {definition.requiredRelief}";
+
+            if (!resourceManager.CanAfford(definition.buildCost))
+                return "Not enough $";
+
+            return null;
         }
 
-        private void TryBuildAtMouse()
+        public bool TryBuild(HexCell cell, TileDefinition definition)
         {
-            if (palette.Length == 0) return;
-
-            Ray ray = worldCamera.ScreenPointToRay(Input.mousePosition);
-            if (!Physics.Raycast(ray, out RaycastHit hit)) return;
-
-            var cell = hit.collider.GetComponent<HexCell>();
-            if (cell == null) return;
-
-            TileDefinition definition = palette[_selectedIndex];
-            TryBuild(cell, definition);
-        }
-
-        private void TryBuild(HexCell cell, TileDefinition definition)
-        {
-            if (definition.category == TileCategory.City && _cityCell != null)
+            string blocked = BlockReason(cell, definition);
+            if (blocked != null)
             {
-                Debug.Log("City already built — it grows on its own, it can't be placed again.");
-                return;
+                Debug.Log($"Can't build {definition?.displayName} on {cell?.coordinates}: {blocked}");
+                return false;
             }
 
-            if (!cell.CanBuild(definition))
-            {
-                Debug.Log($"Can't build {definition.displayName} on {cell.coordinates}: occupied or wrong relief.");
-                return;
-            }
+            if (!resourceManager.TrySpend(definition.buildCost)) return false;
 
-            if (resourceManager.Current.money < definition.buildCost)
-            {
-                Debug.Log($"Not enough money for {definition.displayName} (needs {definition.buildCost}).");
-                return;
-            }
-
-            resourceManager.ApplyTurn(new ResourceVector { money = -definition.buildCost });
             cell.builtTile = definition;
+            cell.SetStructure(StructureFactory.Create(definition));
 
             if (definition.category == TileCategory.City)
             {
@@ -86,7 +64,24 @@ namespace Solarpunk.Tiles
                 _cityCell = cell;
             }
 
-            Debug.Log($"Built {definition.displayName} on {cell.coordinates}.");
+            OnBoardChanged?.Invoke();
+            return true;
+        }
+
+        public bool Demolish(HexCell cell)
+        {
+            if (cell == null || cell.IsEmpty) return false;
+
+            resourceManager.Refund(cell.builtTile.buildCost * refundRate);
+
+            if (cell.builtTile.category == TileCategory.City) _cityCell = null;
+
+            cell.builtTile = null;
+            cell.cityLevel = 1;
+            cell.ClearStructure();
+
+            OnBoardChanged?.Invoke();
+            return true;
         }
     }
 }

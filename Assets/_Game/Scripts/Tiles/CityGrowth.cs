@@ -35,14 +35,13 @@ namespace Solarpunk.Tiles
             return true;
         }
 
+        public float ManualUpgradeCost(int currentLevel) => manualUpgradeCost.Evaluate(currentLevel);
+
         public bool TryManualUpgrade(HexCell cityCell)
         {
             if (cityCell.cityLevel >= MaxLevel) return false;
+            if (!resourceManager.TrySpend(ManualUpgradeCost(cityCell.cityLevel))) return false;
 
-            float cost = manualUpgradeCost.Evaluate(cityCell.cityLevel);
-            if (resourceManager.Current.money < cost) return false;
-
-            resourceManager.ApplyTurn(new ResourceVector { money = -cost });
             cityCell.cityLevel++;
             return true;
         }

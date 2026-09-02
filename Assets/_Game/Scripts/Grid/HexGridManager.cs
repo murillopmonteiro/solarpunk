@@ -4,62 +4,78 @@ using UnityEngine;
 namespace Solarpunk.Grid
 {
     /// <summary>
-    /// Builds the hex board at match start. Territory is fixed for the whole
-    /// match once generated (design doc: 10u², grows only via events or paid
-    /// expansion — not implemented yet).
+    /// Builds the board at match start. For this first playable test the layout
+    /// is a hand-authored 10-hex island (rows of 3/4/3) with a fixed relief
+    /// spread, so every relief restriction from the design doc is reachable:
+    /// 1 waterfall (hydro), 2 coast (tidal), 2 mountain (wind), 5 open.
+    /// Randomised generation returns once the systems are proven.
     /// </summary>
     public class HexGridManager : MonoBehaviour
     {
         [SerializeField] private HexCell hexCellPrefab;
-        [SerializeField] private int gridRadius = 5;
         [SerializeField] private float hexSize = 1f;
-
-        [Range(0f, 1f)] [SerializeField] private float waterfallChance = 0.03f;
-        [Range(0f, 1f)] [SerializeField] private float mountainChance = 0.12f;
-        [Range(0f, 1f)] [SerializeField] private float coastChance = 0.1f;
+        [SerializeField] private float spacing = 1.04f;
 
         private readonly Dictionary<HexCoordinates, HexCell> _cells = new();
 
         public IReadOnlyDictionary<HexCoordinates, HexCell> Cells => _cells;
 
+        private readonly struct CellPlan
+        {
+            public readonly int Q;
+            public readonly int R;
+            public readonly TerrainRelief Relief;
+
+            public CellPlan(int q, int r, TerrainRelief relief)
+            {
+                Q = q;
+                R = r;
+                Relief = relief;
+            }
+        }
+
+        private static readonly CellPlan[] Layout =
+        {
+            new CellPlan(0, -1, TerrainRelief.Mountain),
+            new CellPlan(1, -1, TerrainRelief.Mutable),
+            new CellPlan(2, -1, TerrainRelief.Coast),
+
+            new CellPlan(-1, 0, TerrainRelief.Mutable),
+            new CellPlan(0, 0, TerrainRelief.Mutable),
+            new CellPlan(1, 0, TerrainRelief.Waterfall),
+            new CellPlan(2, 0, TerrainRelief.Coast),
+
+            new CellPlan(-1, 1, TerrainRelief.Mountain),
+            new CellPlan(0, 1, TerrainRelief.Mutable),
+            new CellPlan(1, 1, TerrainRelief.Mutable),
+        };
+
         public void GenerateGrid()
         {
-            foreach (var cell in _cells.Values)
+            foreach (var existing in _cells.Values)
             {
-                if (cell != null) Destroy(cell.gameObject);
+                if (existing != null) Destroy(existing.gameObject);
             }
             _cells.Clear();
 
-            for (int q = -gridRadius; q <= gridRadius; q++)
+            // Centre the island on the origin so camera framing is stable.
+            Vector3 sum = Vector3.zero;
+            foreach (var plan in Layout)
             {
-                int r1 = Mathf.Max(-gridRadius, -q - gridRadius);
-                int r2 = Mathf.Min(gridRadius, -q + gridRadius);
-                for (int r = r1; r <= r2; r++)
-                {
-                    CreateCell(new HexCoordinates(q, r));
-                }
+                sum += new HexCoordinates(plan.Q, plan.R).ToWorldPosition(hexSize);
             }
-        }
+            Vector3 centroid = sum / Layout.Length;
 
-        private void CreateCell(HexCoordinates coords)
-        {
-            HexCell cell = Instantiate(hexCellPrefab, transform);
-            cell.transform.localPosition = coords.ToWorldPosition(hexSize);
-            cell.coordinates = coords;
-            cell.relief = RollRelief();
-            cell.name = $"Hex {coords}";
-            _cells[coords] = cell;
-        }
-
-        private TerrainRelief RollRelief()
-        {
-            float roll = Random.value;
-            if (roll < waterfallChance) return TerrainRelief.Waterfall;
-            roll -= waterfallChance;
-            if (roll < mountainChance) return TerrainRelief.Mountain;
-            roll -= mountainChance;
-            if (roll < coastChance) return TerrainRelief.Coast;
-            return TerrainRelief.Mutable;
+            foreach (var plan in Layout)
+            {
+                var coords = new HexCoordinates(plan.Q, plan.R);
+                HexCell cell = Instantiate(hexCellPrefab, transform);
+                cell.transform.localPosition = (coords.ToWorldPosition(hexSize) - centroid) * spacing;
+                cell.transform.localScale = Vector3.one * hexSize;
+                cell.name = $"Hex {coords} {plan.Relief}";
+                cell.Initialize(coords, plan.Relief);
+                _cells[coords] = cell;
+            }
         }
 
         public bool TryGetCell(HexCoordinates coords, out HexCell cell) => _cells.TryGetValue(coords, out cell);

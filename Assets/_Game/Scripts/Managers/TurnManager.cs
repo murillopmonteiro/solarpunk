@@ -13,7 +13,7 @@ namespace Solarpunk.Managers
     /// </summary>
     public class TurnManager : MonoBehaviour
     {
-        private const int VictoryTurn = 300;
+        public const int VictoryTurn = 300;
 
         [SerializeField] private HexGridManager gridManager;
         [SerializeField] private ResourceManager resourceManager;
@@ -22,37 +22,45 @@ namespace Solarpunk.Managers
         public int CurrentTurn { get; private set; }
         public event Action<int> OnTurnAdvanced;
 
-        public void AdvanceTurn()
+        /// <summary>Sum of every built tile's per-turn effect — also used for the HUD preview.</summary>
+        public ResourceVector CalculateTurnDelta()
         {
-            ResourceVector turnDelta = ResourceVector.Zero;
+            ResourceVector delta = ResourceVector.Zero;
 
-            foreach (var cell in gridManager.Cells)
+            foreach (var pair in gridManager.Cells)
             {
-                var hex = cell.Value;
+                HexCell hex = pair.Value;
                 if (hex.builtTile == null) continue;
 
-                if (hex.builtTile.category == TileCategory.City)
-                {
-                    turnDelta += cityGrowth.GetEffectForLevel(hex.cityLevel);
-                    cityGrowth.TryAutoTick(hex);
-                }
-                else
-                {
-                    turnDelta += hex.builtTile.perTurnEffect;
-                }
+                delta += hex.builtTile.category == TileCategory.City
+                    ? cityGrowth.GetEffectForLevel(hex.cityLevel)
+                    : hex.builtTile.perTurnEffect;
             }
 
-            // TODO: roll a random event here and fold its effect into turnDelta.
+            return delta;
+        }
 
-            resourceManager.ApplyTurn(turnDelta);
+        public void AdvanceTurn()
+        {
+            if (resourceManager.GameOver) return;
+
+            resourceManager.ApplyTurn(CalculateTurnDelta());
+
+            // TODO: roll a random event here (design doc: one per turn).
+
+            foreach (var pair in gridManager.Cells)
+            {
+                HexCell hex = pair.Value;
+                if (hex.builtTile != null && hex.builtTile.category == TileCategory.City)
+                {
+                    cityGrowth.TryAutoTick(hex);
+                }
+            }
 
             CurrentTurn++;
             OnTurnAdvanced?.Invoke(CurrentTurn);
 
-            if (CurrentTurn >= VictoryTurn)
-            {
-                resourceManager.DeclareVictory();
-            }
+            if (CurrentTurn >= VictoryTurn) resourceManager.DeclareVictory();
         }
     }
 }

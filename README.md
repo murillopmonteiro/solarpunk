@@ -9,63 +9,95 @@ Full design doc: [docs/GameDesign.md](docs/GameDesign.md)
 
 ## Stack
 
-Unity 6 (`6000.2.1f1`), C#.
+Unity 6 (`6000.2.1f1`), C#, built-in render pipeline, uGUI.
 
-## Getting started
+## Run it
 
-1. Open this folder with **Unity Hub** → Add → select `Solarpunk`. It'll use
-   the `6000.2.1f1` editor.
+1. **Unity Hub** → Add → select this folder → open with `6000.2.1f1`.
 2. Open **`Assets/_Game/Scenes/Game.unity`**.
-3. Hit Play.
+3. Press **Play**.
 
-### Controls (placeholder — no UI yet)
+### What you can do
 
-- **Number keys 1-9, 0** — select a tile to build: `1` City, `2` Hidrelétrica,
-  `3` Maremotriz, `4` Eólica, `5` Solar, `6` Nuclear, `7` Biomassa, `8` Carvão,
-  `9` Petróleo, `0` Extração.
-- **Left click a hex** — build the selected tile there (if the relief allows
-  it and you can afford it).
-- **Space** — advance one turn (one year). Console logs the 5 resources after
-  each turn, plus victory/defeat.
+- **Click a hexagon** — it lifts and brightens, and the right-hand panel
+  shows its terrain plus everything buildable on it.
+- **Click a build option** — a placeholder structure drops on the hex and
+  the cost comes out of your money. Options you can't use are greyed out
+  with the reason on them (`Needs Waterfall`, `Not enough $`).
+- **Demolish** a built hex to clear it and get half the cost back. The city
+  additionally offers a paid instant level-up.
+- **NEXT YEAR button (or Space)** — resolves one turn. Every stat in the top
+  bar shows its current value and its projected per-turn change.
 
-Regenerate the board/tiles/scene at any point via the Unity menu
-**Solarpunk → Build Initial Scene** (recreates the hex prefab + scene) and
-**Solarpunk → Generate Starting Tile Definitions** (recreates the 10 tile
-assets) — both are idempotent, safe to rerun after tweaking the generator
-code in `Assets/Editor/`.
+## Current test scene
+
+A hand-authored 10-hex island (rows of 3/4/3) with a deliberate terrain
+spread so every relief restriction in the design doc is reachable in one
+sitting:
+
+| Terrain | Count | Unlocks |
+|---|---|---|
+| Waterfall | 1 | Hidrelétrica (only here) |
+| Coast | 2 | Maremotriz (only here) |
+| Mountain | 2 | Eólica bonus (not yet implemented) |
+| Open | 5 | anything unrestricted |
+
+Randomised board generation comes back once the systems are proven — a
+fixed board makes the mechanics reproducible to test.
+
+## Regenerating
+
+Everything generated lives behind menu items, all idempotent and safe to
+rerun after editing the generator code in `Assets/Editor/`:
+
+- **Solarpunk → Build Initial Scene** — rebuilds mesh, prefab, tile assets
+  and the whole scene.
+- **Solarpunk → Generate Starting Tile Definitions** — just the 10 tile assets.
+- **Solarpunk → Generate Hex Mesh** — just the hexagon mesh.
+- **Solarpunk → Validate Scene** — checks for unassigned references, a
+  missing font, a prefab without a collider. Also runs headless:
+
+```bash
+"C:\Program Files\Unity\Hub\Editor\6000.2.1f1\Editor\Unity.exe" -batchmode -nographics -projectPath . -executeMethod Solarpunk.EditorTools.SceneValidator.Validate -quit -logFile validate.log
+```
 
 ## Project layout
 
 ```
 Assets/_Game/
   Scripts/
-    Core/      resource types + the per-turn ResourceVector every tile uses
-    Grid/      hex coordinates, relief, cell + grid generation
-    Tiles/     TileDefinition data asset, city growth, build controller
+    Core/      ResourceVector — the per-turn 5-resource effect every tile has
+    Grid/      hex coordinates, relief, cell, board generation, click selection
+    Tiles/     TileDefinition data asset, build rules, city growth, placeholder art
     Managers/  ResourceManager, TurnManager, GameManager
-    Debug/     keyboard/console stand-in for a real HUD
-  Data/
-    TileDefinitions/   the 10 tile assets (city, 8 power plants, extraction)
-  Scenes/
-    Game.unity          the playable bootstrap scene
-  Prefabs/
-    HexCellPrototype     placeholder colored-cube hex (swap for real art later)
+    UI/        code-built HUD: resource bar, contextual build panel
+  Data/TileDefinitions/   the 10 tile assets
+  Meshes/HexPrism         generated hexagon mesh
+  Prefabs/HexCell         hex prefab (mesh + collider + HexCell)
+  Scenes/Game.unity       the playable scene
 Assets/Editor/
-    SceneBootstrapper.cs   builds the hex prefab + scene from code
-    TileDataFactory.cs     generates the 10 tile assets from code
+  HexMeshFactory      generates the hexagon mesh
+  TileDataFactory     generates the 10 tile assets
+  SceneBootstrapper   assembles the entire scene from code
+  SceneValidator      catches wiring errors a compile won't
 docs/
-    GameDesign.md              transcribed design doc
-    solarpunk-game-design.pdf  original
+  GameDesign.md / solarpunk-game-design.pdf
 ```
+
+The HUD is built from code at runtime rather than authored in the scene, so
+it regenerates cleanly and there's no scene wiring to break while the layout
+is still churning.
 
 ## Status
 
-Playable simulation loop: hex grid with rolled relief, 10 buildable tiles
-with placeholder (untested) balance numbers, click-to-build, 5-resource
-tracking with blackout/win/loss, hybrid city growth. No real art, UI, random
-events, territory expansion, or research-currency system yet — see
-`docs/GameDesign.md` for what's designed but unbuilt.
+Working: board, terrain restrictions, selection, build/demolish, the 5-stat
+economy with blackout penalty, hybrid city growth, win/loss + restart.
 
-Balance numbers in `TileDataFactory.cs` are made up to get something
-running — the design doc only specifies qualitative profiles ("alta
-energia", "custo médio-alto"), not numbers. Tune freely.
+Not built yet: real art, random yearly events, territory expansion, the
+research currency (the design doc has the city generating "pesquisa", which
+sits outside the 5-resource vector and needs its own system), extraction
+actually gating fossil/nuclear operation, and the mountain bonus for wind.
+
+Balance numbers in `TileDataFactory.cs` are invented — the design doc
+specifies qualitative profiles ("alta energia, custo médio-alto"), not
+numbers. Expect to retune them.
