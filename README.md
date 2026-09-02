@@ -15,19 +15,24 @@ Unity 6 (`6000.2.1f1`), C#.
 
 1. Open this folder with **Unity Hub** → Add → select `Solarpunk`. It'll use
    the `6000.2.1f1` editor.
-2. Open the empty scene Unity created for you (`Assets/Scenes`), or create a
-   new one, and add:
-   - An empty GameObject with `HexGridManager` — assign a hex cell prefab
-     (a simple hex mesh/sprite with a `HexCell` component on it).
-   - An empty GameObject with `ResourceManager`.
-   - An empty GameObject with `TurnManager` — wire in the grid + resource
-     manager references.
-   - An empty GameObject with `GameManager` — wire in the same references.
-3. Create the 8 power plant + city + extraction tile assets via
-   **Assets → Create → Solarpunk → Tile Definition**, one per tile type from
-   the design doc's tables, and drop them in
-   `Assets/_Game/Data/TileDefinitions`.
-4. Hit Play — `GameManager` generates the board on `Start()`.
+2. Open **`Assets/_Game/Scenes/Game.unity`**.
+3. Hit Play.
+
+### Controls (placeholder — no UI yet)
+
+- **Number keys 1-9, 0** — select a tile to build: `1` City, `2` Hidrelétrica,
+  `3` Maremotriz, `4` Eólica, `5` Solar, `6` Nuclear, `7` Biomassa, `8` Carvão,
+  `9` Petróleo, `0` Extração.
+- **Left click a hex** — build the selected tile there (if the relief allows
+  it and you can afford it).
+- **Space** — advance one turn (one year). Console logs the 5 resources after
+  each turn, plus victory/defeat.
+
+Regenerate the board/tiles/scene at any point via the Unity menu
+**Solarpunk → Build Initial Scene** (recreates the hex prefab + scene) and
+**Solarpunk → Generate Starting Tile Definitions** (recreates the 10 tile
+assets) — both are idempotent, safe to rerun after tweaking the generator
+code in `Assets/Editor/`.
 
 ## Project layout
 
@@ -36,10 +41,18 @@ Assets/_Game/
   Scripts/
     Core/      resource types + the per-turn ResourceVector every tile uses
     Grid/      hex coordinates, relief, cell + grid generation
-    Tiles/     TileDefinition data asset, city growth logic
+    Tiles/     TileDefinition data asset, city growth, build controller
     Managers/  ResourceManager, TurnManager, GameManager
+    Debug/     keyboard/console stand-in for a real HUD
   Data/
-    TileDefinitions/   ScriptableObject instances (city, 8 power plants, extraction)
+    TileDefinitions/   the 10 tile assets (city, 8 power plants, extraction)
+  Scenes/
+    Game.unity          the playable bootstrap scene
+  Prefabs/
+    HexCellPrototype     placeholder colored-cube hex (swap for real art later)
+Assets/Editor/
+    SceneBootstrapper.cs   builds the hex prefab + scene from code
+    TileDataFactory.cs     generates the 10 tile assets from code
 docs/
     GameDesign.md              transcribed design doc
     solarpunk-game-design.pdf  original
@@ -47,8 +60,12 @@ docs/
 
 ## Status
 
-Core simulation skeleton only: hex grid generation with rolled relief,
-5-resource tracking, turn loop, city growth stub. No scene, prefabs, art,
-UI, events, or the 8 tile-definition assets yet — see `docs/GameDesign.md`
-for what's designed but unbuilt (random events, territory expansion,
-research tree).
+Playable simulation loop: hex grid with rolled relief, 10 buildable tiles
+with placeholder (untested) balance numbers, click-to-build, 5-resource
+tracking with blackout/win/loss, hybrid city growth. No real art, UI, random
+events, territory expansion, or research-currency system yet — see
+`docs/GameDesign.md` for what's designed but unbuilt.
+
+Balance numbers in `TileDataFactory.cs` are made up to get something
+running — the design doc only specifies qualitative profiles ("alta
+energia", "custo médio-alto"), not numbers. Tune freely.

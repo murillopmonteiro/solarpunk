@@ -1,6 +1,9 @@
+using System.Collections.Generic;
+using Solarpunk.Core;
 using Solarpunk.Debugging;
 using Solarpunk.Grid;
 using Solarpunk.Managers;
+using Solarpunk.Tiles;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -22,7 +25,8 @@ namespace Solarpunk.EditorTools
         public static void BuildInitialScene()
         {
             GameObject prefab = CreateHexPrefab();
-            BuildScene(prefab);
+            List<TileDefinition> palette = TileDataFactory.GenerateAll();
+            BuildScene(prefab, palette);
         }
 
         private static GameObject CreateHexPrefab()
@@ -41,7 +45,7 @@ namespace Solarpunk.EditorTools
             return prefabAsset;
         }
 
-        private static void BuildScene(GameObject hexPrefab)
+        private static void BuildScene(GameObject hexPrefab, List<TileDefinition> palette)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -73,12 +77,23 @@ namespace Solarpunk.EditorTools
             resourceGo.transform.SetParent(managersRoot.transform);
             var resourceManager = resourceGo.AddComponent<ResourceManager>();
 
+            var cityGo = new GameObject("CityGrowth");
+            cityGo.transform.SetParent(managersRoot.transform);
+            var cityGrowth = cityGo.AddComponent<CityGrowth>();
+            var citySo = new SerializedObject(cityGrowth);
+            citySo.FindProperty("resourceManager").objectReferenceValue = resourceManager;
+            citySo.FindProperty("happinessHealthyThreshold").floatValue = 30f;
+            SetResourceVector(citySo.FindProperty("perLevelEffect"),
+                new ResourceVector { energy = -8f, population = 5f, happiness = 2f, sustainability = -1f });
+            citySo.ApplyModifiedPropertiesWithoutUndo();
+
             var turnGo = new GameObject("TurnManager");
             turnGo.transform.SetParent(managersRoot.transform);
             var turnManager = turnGo.AddComponent<TurnManager>();
             var turnSo = new SerializedObject(turnManager);
             turnSo.FindProperty("gridManager").objectReferenceValue = gridManager;
             turnSo.FindProperty("resourceManager").objectReferenceValue = resourceManager;
+            turnSo.FindProperty("cityGrowth").objectReferenceValue = cityGrowth;
             turnSo.ApplyModifiedPropertiesWithoutUndo();
 
             var gameGo = new GameObject("GameManager");
@@ -97,12 +112,36 @@ namespace Solarpunk.EditorTools
             debugSo.FindProperty("resourceManager").objectReferenceValue = resourceManager;
             debugSo.ApplyModifiedPropertiesWithoutUndo();
 
+            var buildGo = new GameObject("BuildController");
+            buildGo.transform.SetParent(managersRoot.transform);
+            var buildController = buildGo.AddComponent<BuildController>();
+            var buildSo = new SerializedObject(buildController);
+            buildSo.FindProperty("worldCamera").objectReferenceValue = camera;
+            buildSo.FindProperty("resourceManager").objectReferenceValue = resourceManager;
+            SerializedProperty paletteProp = buildSo.FindProperty("palette");
+            paletteProp.arraySize = palette.Count;
+            for (int i = 0; i < palette.Count; i++)
+            {
+                paletteProp.GetArrayElementAtIndex(i).objectReferenceValue = palette[i];
+            }
+            buildSo.ApplyModifiedPropertiesWithoutUndo();
+
             System.IO.Directory.CreateDirectory("Assets/_Game/Scenes");
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
 
-            Debug.Log($"Bootstrap scene saved to {ScenePath}. Press Play, then Space to advance a turn.");
+            Debug.Log($"Bootstrap scene saved to {ScenePath}. Press Play, then Space to advance a turn, " +
+                      "number keys to select a tile, click a hex to build.");
+        }
+
+        private static void SetResourceVector(SerializedProperty property, ResourceVector value)
+        {
+            property.FindPropertyRelative("energy").floatValue = value.energy;
+            property.FindPropertyRelative("money").floatValue = value.money;
+            property.FindPropertyRelative("sustainability").floatValue = value.sustainability;
+            property.FindPropertyRelative("population").floatValue = value.population;
+            property.FindPropertyRelative("happiness").floatValue = value.happiness;
         }
     }
 }

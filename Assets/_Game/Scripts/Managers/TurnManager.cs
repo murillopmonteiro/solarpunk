@@ -1,6 +1,7 @@
 using System;
 using Solarpunk.Core;
 using Solarpunk.Grid;
+using Solarpunk.Tiles;
 using UnityEngine;
 
 namespace Solarpunk.Managers
@@ -16,6 +17,7 @@ namespace Solarpunk.Managers
 
         [SerializeField] private HexGridManager gridManager;
         [SerializeField] private ResourceManager resourceManager;
+        [SerializeField] private CityGrowth cityGrowth;
 
         public int CurrentTurn { get; private set; }
         public event Action<int> OnTurnAdvanced;
@@ -28,7 +30,16 @@ namespace Solarpunk.Managers
             {
                 var hex = cell.Value;
                 if (hex.builtTile == null) continue;
-                turnDelta += hex.builtTile.perTurnEffect;
+
+                if (hex.builtTile.category == TileCategory.City)
+                {
+                    turnDelta += cityGrowth.GetEffectForLevel(hex.cityLevel);
+                    cityGrowth.TryAutoTick(hex);
+                }
+                else
+                {
+                    turnDelta += hex.builtTile.perTurnEffect;
+                }
             }
 
             // TODO: roll a random event here and fold its effect into turnDelta.
