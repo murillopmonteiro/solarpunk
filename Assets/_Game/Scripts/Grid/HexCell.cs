@@ -57,10 +57,10 @@ namespace Solarpunk.Grid
             if (_selected == selected) return;
             _selected = selected;
 
-            ApplyColor(selected ? Color.Lerp(_baseColor, Color.white, 0.45f) : _baseColor);
+            ApplyColor(selected ? Color.Lerp(_baseColor, Color.white, 0.62f) : _baseColor);
 
             Vector3 p = transform.localPosition;
-            p.y = _restingY + (selected ? 0.12f : 0f);
+            p.y = _restingY + (selected ? 0.22f : 0f);
             transform.localPosition = p;
         }
 

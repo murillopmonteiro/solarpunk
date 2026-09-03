@@ -92,8 +92,10 @@ namespace Solarpunk.EditorTools
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(0.09f, 0.13f, 0.16f);
             camera.fieldOfView = 45f;
+            // Offset right and pulled back so the board sits clear of the top bar
+            // and the right-hand inspector panel rather than behind them.
             cameraGo.transform.SetPositionAndRotation(
-                new Vector3(0f, 5.2f, -4.6f), Quaternion.Euler(48.5f, 0f, 0f));
+                new Vector3(1.15f, 6.6f, -5.5f), Quaternion.Euler(49f, 0f, 0f));
             cameraGo.tag = "MainCamera";
 
             // --- Lighting ---
@@ -176,6 +178,15 @@ namespace Solarpunk.EditorTools
             hudSo.FindProperty("buildController").objectReferenceValue = buildController;
             hudSo.FindProperty("cityGrowth").objectReferenceValue = cityGrowth;
             hudSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // Dev-only capture rig; inert unless the player is run with -autoshot.
+            var screenshots = AddChild<Solarpunk.Dev.DevScreenshots>(managersRoot, "DevScreenshots");
+            var shotSo = new SerializedObject(screenshots);
+            shotSo.FindProperty("gridManager").objectReferenceValue = gridManager;
+            shotSo.FindProperty("selectionController").objectReferenceValue = selectionController;
+            shotSo.FindProperty("buildController").objectReferenceValue = buildController;
+            shotSo.FindProperty("turnManager").objectReferenceValue = turnManager;
+            shotSo.ApplyModifiedPropertiesWithoutUndo();
 
             System.IO.Directory.CreateDirectory("Assets/_Game/Scenes");
             EditorSceneManager.SaveScene(scene, ScenePath);

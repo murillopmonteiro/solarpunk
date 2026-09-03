@@ -3,15 +3,29 @@ using UnityEngine.UI;
 
 namespace Solarpunk.UI
 {
-    /// <summary>Small helpers for assembling the placeholder HUD from code.</summary>
+    /// <summary>
+    /// Helpers for assembling the HUD from code.
+    ///
+    /// Everything is positioned explicitly against a corner anchor rather than
+    /// with LayoutGroups: auto-layout silently inflated the first version of the
+    /// bar to four times its intended height, and exact placement is easier to
+    /// reason about for a fixed HUD.
+    /// </summary>
     public static class UIFactory
     {
-        public static readonly Color PanelColor = new Color(0.07f, 0.10f, 0.11f, 0.90f);
-        public static readonly Color PanelSoftColor = new Color(0.12f, 0.16f, 0.17f, 0.95f);
-        public static readonly Color TextColor = new Color(0.92f, 0.95f, 0.92f);
-        public static readonly Color MutedColor = new Color(0.60f, 0.67f, 0.64f);
-        public static readonly Color AccentColor = new Color(0.45f, 0.82f, 0.55f);
-        public static readonly Color WarnColor = new Color(0.92f, 0.55f, 0.42f);
+        public static readonly Vector2 TopLeft = new Vector2(0f, 1f);
+        public static readonly Vector2 TopRight = new Vector2(1f, 1f);
+        public static readonly Vector2 BottomLeft = new Vector2(0f, 0f);
+
+        public static readonly Color PanelColor = new Color(0.08f, 0.10f, 0.12f, 0.94f);
+        public static readonly Color RowColor = new Color(0.14f, 0.17f, 0.19f, 1f);
+        public static readonly Color RowDisabledColor = new Color(0.11f, 0.12f, 0.13f, 1f);
+        public static readonly Color DividerColor = new Color(1f, 1f, 1f, 0.09f);
+        public static readonly Color TextColor = new Color(0.93f, 0.96f, 0.94f);
+        public static readonly Color MutedColor = new Color(0.56f, 0.63f, 0.62f);
+        public static readonly Color FaintColor = new Color(0.40f, 0.45f, 0.45f);
+        public static readonly Color AccentColor = new Color(0.44f, 0.83f, 0.55f);
+        public static readonly Color WarnColor = new Color(0.93f, 0.56f, 0.42f);
 
         private static Font _font;
 
@@ -32,6 +46,28 @@ namespace Solarpunk.UI
             return (RectTransform)go.transform;
         }
 
+        /// <summary>Pin a rect to one corner of its parent at an exact size and offset.</summary>
+        public static RectTransform Place(RectTransform rect, Vector2 anchor, float x, float y, float w, float h)
+        {
+            rect.anchorMin = anchor;
+            rect.anchorMax = anchor;
+            rect.pivot = anchor;
+            rect.anchoredPosition = new Vector2(x, y);
+            rect.sizeDelta = new Vector2(w, h);
+            return rect;
+        }
+
+        /// <summary>Full-width strip pinned to the top of its parent.</summary>
+        public static RectTransform PlaceTopStrip(RectTransform rect, float height)
+        {
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(0f, height);
+            return rect;
+        }
+
         public static RectTransform Panel(string name, Transform parent, Color color)
         {
             RectTransform rect = NewRect(name, parent);
@@ -40,17 +76,8 @@ namespace Solarpunk.UI
             return rect;
         }
 
-        /// <summary>Stretch a rect to its parent with the given pixel insets.</summary>
-        public static void Stretch(RectTransform rect, float left, float right, float top, float bottom)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = new Vector2(left, bottom);
-            rect.offsetMax = new Vector2(-right, -top);
-        }
-
         public static Text Label(string name, Transform parent, string content, int size, Color color,
-            TextAnchor anchor = TextAnchor.MiddleLeft, FontStyle style = FontStyle.Normal)
+            TextAnchor anchor = TextAnchor.UpperLeft, FontStyle style = FontStyle.Normal)
         {
             RectTransform rect = NewRect(name, parent);
             var text = rect.gameObject.AddComponent<Text>();
@@ -60,8 +87,8 @@ namespace Solarpunk.UI
             text.color = color;
             text.alignment = anchor;
             text.fontStyle = style;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
             text.raycastTarget = false;
             return text;
         }
@@ -74,45 +101,29 @@ namespace Solarpunk.UI
 
             var colors = button.colors;
             colors.normalColor = Color.white;
-            colors.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
-            colors.pressedColor = new Color(0.80f, 0.80f, 0.80f, 1f);
-            colors.disabledColor = new Color(0.45f, 0.45f, 0.45f, 0.6f);
-            colors.fadeDuration = 0.06f;
+            colors.highlightedColor = new Color(1.25f, 1.25f, 1.25f, 1f);
+            colors.pressedColor = new Color(0.75f, 0.75f, 0.75f, 1f);
+            colors.disabledColor = Color.white; // disabled rows are styled explicitly instead
+            colors.fadeDuration = 0.05f;
             button.colors = colors;
 
             return button;
         }
 
-        public static VerticalLayoutGroup VerticalLayout(RectTransform rect, int spacing, RectOffset padding)
+        /// <summary>Thin horizontal rule, positioned from the parent's top-left.</summary>
+        public static void Divider(Transform parent, float x, float y, float width)
         {
-            var layout = rect.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = spacing;
-            layout.padding = padding;
-            layout.childControlWidth = true;
-            layout.childControlHeight = false;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            return layout;
+            RectTransform rect = Panel("Divider", parent, DividerColor);
+            Place(rect, TopLeft, x, y, width, 1f);
+            rect.GetComponent<Image>().raycastTarget = false;
         }
 
-        public static HorizontalLayoutGroup HorizontalLayout(RectTransform rect, int spacing, RectOffset padding)
+        /// <summary>Small colour swatch used for terrain keys and tile-type chips.</summary>
+        public static void Swatch(Transform parent, float x, float y, float w, float h, Color color)
         {
-            var layout = rect.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = spacing;
-            layout.padding = padding;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = true;
-            return layout;
-        }
-
-        public static LayoutElement FixedHeight(RectTransform rect, float height)
-        {
-            var element = rect.gameObject.AddComponent<LayoutElement>();
-            element.minHeight = height;
-            element.preferredHeight = height;
-            return element;
+            RectTransform rect = Panel("Swatch", parent, color);
+            Place(rect, TopLeft, x, y, w, h);
+            rect.GetComponent<Image>().raycastTarget = false;
         }
     }
 }

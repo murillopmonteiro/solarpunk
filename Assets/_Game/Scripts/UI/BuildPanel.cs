@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Solarpunk.Grid;
 using Solarpunk.Tiles;
@@ -7,23 +8,29 @@ using UnityEngine.UI;
 namespace Solarpunk.UI
 {
     /// <summary>
-    /// Right-hand contextual panel: shows the selected hex, and either the
-    /// buildable options for it or what's already there (with a demolish, and
-    /// for the city an upgrade, control).
+    /// Right-hand inspector for the selected hex: what the terrain is, what's on
+    /// it, and what can go there. Every option shows its cost and its yearly
+    /// effect up front, so the choice can be made without trial and error.
     /// </summary>
     public class BuildPanel : MonoBehaviour
     {
-        private const float PanelWidth = 310f;
-        private const float RowHeight = 44f;
+        public const float PanelWidth = 348f;
+
+        private const float HeaderHeight = 92f;
+        private const float RowHeight = 46f;
+        private const float RowGap = 5f;
+        private const float SidePad = 12f;
+        private const float BottomPad = 12f;
 
         private BuildController _buildController;
         private CityGrowth _cityGrowth;
 
         private RectTransform _root;
-        private RectTransform _content;
         private Text _header;
-        private Text _subheader;
-        private Text _emptyHint;
+        private Text _terrainLabel;
+        private RectTransform _terrainSwatch;
+        private Image _terrainSwatchImage;
+        private Text _sectionLabel;
 
         private readonly List<GameObject> _rows = new();
 
@@ -33,37 +40,28 @@ namespace Solarpunk.UI
             _cityGrowth = cityGrowth;
 
             _root = UIFactory.Panel("BuildPanel", canvas, UIFactory.PanelColor);
-            _root.anchorMin = new Vector2(1f, 0f);
-            _root.anchorMax = new Vector2(1f, 1f);
-            _root.pivot = new Vector2(1f, 1f);
-            _root.offsetMin = new Vector2(-PanelWidth, 16f);
-            _root.offsetMax = new Vector2(-16f, -86f);
+            UIFactory.Place(_root, UIFactory.TopRight, -16f, -(ResourceBar.BarHeight + 14f), PanelWidth, 300f);
 
             _header = UIFactory.Label("Header", _root, "NO HEX SELECTED", 16, UIFactory.TextColor,
                 TextAnchor.UpperLeft, FontStyle.Bold);
-            _header.rectTransform.anchorMin = new Vector2(0f, 1f);
-            _header.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _header.rectTransform.offsetMin = new Vector2(16f, -34f);
-            _header.rectTransform.offsetMax = new Vector2(-16f, -12f);
+            UIFactory.Place(_header.rectTransform, UIFactory.TopLeft, SidePad, -12f, PanelWidth - SidePad * 2f, 22f);
 
-            _subheader = UIFactory.Label("Subheader", _root, "Click a hexagon to begin.", 12, UIFactory.MutedColor,
-                TextAnchor.UpperLeft);
-            _subheader.rectTransform.anchorMin = new Vector2(0f, 1f);
-            _subheader.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _subheader.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _subheader.rectTransform.offsetMin = new Vector2(16f, -58f);
-            _subheader.rectTransform.offsetMax = new Vector2(-16f, -38f);
+            _terrainSwatch = UIFactory.Panel("TerrainSwatch", _root, Color.clear);
+            UIFactory.Place(_terrainSwatch, UIFactory.TopLeft, SidePad, -38f, 10f, 10f);
+            _terrainSwatchImage = _terrainSwatch.GetComponent<Image>();
+            _terrainSwatchImage.raycastTarget = false;
 
-            _content = UIFactory.NewRect("Content", _root);
-            _content.anchorMin = new Vector2(0f, 0f);
-            _content.anchorMax = new Vector2(1f, 1f);
-            _content.offsetMin = new Vector2(10f, 10f);
-            _content.offsetMax = new Vector2(-10f, -66f);
-            UIFactory.VerticalLayout(_content, 6, new RectOffset(0, 0, 0, 0));
+            _terrainLabel = UIFactory.Label("Terrain", _root, "Click a hexagon to inspect it", 12,
+                UIFactory.MutedColor);
+            UIFactory.Place(_terrainLabel.rectTransform, UIFactory.TopLeft, SidePad + 16f, -38f,
+                PanelWidth - SidePad * 2f - 16f, 18f);
 
-            _emptyHint = UIFactory.Label("EmptyHint", _content, "", 12, UIFactory.MutedColor, TextAnchor.UpperLeft);
-            UIFactory.FixedHeight(_emptyHint.rectTransform, 40f);
+            UIFactory.Divider(_root, SidePad, -60f, PanelWidth - SidePad * 2f);
+
+            // Sits between the divider and the first row — must clear both.
+            _sectionLabel = UIFactory.Label("Section", _root, "", 11, UIFactory.FaintColor);
+            UIFactory.Place(_sectionLabel.rectTransform, UIFactory.TopLeft, SidePad, -70f,
+                PanelWidth - SidePad * 2f, 15f);
         }
 
         public void Show(HexCell cell)
@@ -73,97 +71,132 @@ namespace Solarpunk.UI
             if (cell == null)
             {
                 _header.text = "NO HEX SELECTED";
-                _subheader.text = "Click a hexagon to begin.";
-                _emptyHint.text = "";
+                _terrainLabel.text = "Click a hexagon to inspect it";
+                _terrainSwatchImage.color = Color.clear;
+                _sectionLabel.text = "";
+                Resize(0);
                 return;
             }
 
             _header.text = $"HEX {cell.coordinates}";
-            _subheader.text = $"Terrain: {cell.relief}";
+            _terrainLabel.text = TerrainDescription(cell.relief);
+            _terrainSwatchImage.color = HexCell.ColorForRelief(cell.relief);
 
-            if (cell.IsEmpty) ShowBuildOptions(cell);
-            else ShowBuiltTile(cell);
+            int rowCount = cell.IsEmpty ? ShowBuildOptions(cell) : ShowBuiltTile(cell);
+            Resize(rowCount);
         }
 
-        private void ShowBuildOptions(HexCell cell)
+        private static string TerrainDescription(TerrainRelief relief)
         {
-            _emptyHint.text = "BUILD HERE";
+            return relief switch
+            {
+                TerrainRelief.Waterfall => "Waterfall — the only hydro site",
+                TerrainRelief.Mountain => "Mountain — favours wind",
+                TerrainRelief.Coast => "Coast — the only tidal site",
+                _ => "Open ground — no restriction"
+            };
+        }
 
+        private int ShowBuildOptions(HexCell cell)
+        {
+            _sectionLabel.text = "BUILD ON THIS HEX";
+
+            int index = 0;
             foreach (TileDefinition definition in _buildController.Palette)
             {
                 if (definition == null) continue;
 
                 string blocked = _buildController.BlockReason(cell, definition);
-                CreateRow(
-                    definition.displayName,
-                    definition.ShortSummary(),
-                    blocked,
-                    definition.placeholderColor,
-                    () => _buildController.TryBuild(cell, definition));
+                string detail = definition.category == TileCategory.City
+                    ? "Grows each year, powers your population"
+                    : StatFormat.EffectSummary(definition.perTurnEffect);
+
+                CreateRow(index++, definition.displayName, $"${definition.buildCost:0}", detail, blocked,
+                    definition.placeholderColor, () => _buildController.TryBuild(cell, definition));
             }
+
+            return index;
         }
 
-        private void ShowBuiltTile(HexCell cell)
+        private int ShowBuiltTile(HexCell cell)
         {
             TileDefinition built = cell.builtTile;
-            _emptyHint.text = built.category == TileCategory.City
-                ? $"BUILT: {built.displayName}  (level {cell.cityLevel})"
-                : $"BUILT: {built.displayName}";
+            bool isCity = built.category == TileCategory.City;
 
-            if (built.category == TileCategory.City && cell.cityLevel < CityGrowth.MaxLevel)
+            _sectionLabel.text = isCity
+                ? $"BUILT — {built.displayName.ToUpper()}  ·  LEVEL {cell.cityLevel}"
+                : $"BUILT — {built.displayName.ToUpper()}";
+
+            int index = 0;
+
+            string effect = isCity
+                ? StatFormat.EffectSummary(_cityGrowth.GetEffectForLevel(cell.cityLevel))
+                : StatFormat.EffectSummary(built.perTurnEffect);
+            CreateRow(index++, "Current output", "", effect, null, built.placeholderColor, null);
+
+            if (isCity && cell.cityLevel < CityGrowth.MaxLevel)
             {
                 float cost = _cityGrowth.ManualUpgradeCost(cell.cityLevel);
-                CreateRow(
-                    $"Upgrade to level {cell.cityLevel + 1}",
-                    $"Instant  ·  ${cost:0}",
-                    null,
-                    UIFactory.AccentColor,
+                CreateRow(index++, $"Upgrade to level {cell.cityLevel + 1}", $"${cost:0}",
+                    "Instant, skips waiting for growth", null, UIFactory.AccentColor,
                     () => _cityGrowth.TryManualUpgrade(cell));
             }
 
-            CreateRow(
-                "Demolish",
-                "Clears the hex, refunds half",
-                null,
-                UIFactory.WarnColor,
+            CreateRow(index++, "Demolish", $"+${built.buildCost * 0.5f:0}",
+                "Clears the hex and refunds half the cost", null, UIFactory.WarnColor,
                 () => _buildController.Demolish(cell));
+
+            return index;
         }
 
-        private void CreateRow(string title, string subtitle, string blockedReason, Color swatch,
-            UnityEngine.Events.UnityAction onClick)
+        /// <param name="onClick">null makes the row a read-only info strip.</param>
+        private void CreateRow(int index, string title, string trailing, string detail, string blockedReason,
+            Color chip, Action onClick)
         {
-            bool enabled = blockedReason == null;
+            bool interactive = onClick != null && blockedReason == null;
+            float y = -(HeaderHeight + index * (RowHeight + RowGap));
+            float width = PanelWidth - SidePad * 2f;
 
-            Button button = UIFactory.Button(title, _content, UIFactory.PanelSoftColor);
-            UIFactory.FixedHeight(button.GetComponent<RectTransform>(), RowHeight);
-            button.interactable = enabled;
-            if (enabled) button.onClick.AddListener(onClick);
+            Color background = blockedReason == null ? UIFactory.RowColor : UIFactory.RowDisabledColor;
+            Button button = UIFactory.Button(title, _root, background);
+            RectTransform rect = button.GetComponent<RectTransform>();
+            UIFactory.Place(rect, UIFactory.TopLeft, SidePad, y, width, RowHeight);
 
-            // Colour chip so build options read at a glance.
-            RectTransform chip = UIFactory.Panel("Chip", button.transform, swatch);
-            chip.anchorMin = new Vector2(0f, 0.5f);
-            chip.anchorMax = new Vector2(0f, 0.5f);
-            chip.pivot = new Vector2(0f, 0.5f);
-            chip.anchoredPosition = new Vector2(9f, 0f);
-            chip.sizeDelta = new Vector2(5f, RowHeight - 16f);
-            chip.GetComponent<Image>().raycastTarget = false;
+            button.interactable = interactive;
+            if (interactive) button.onClick.AddListener(() => onClick());
 
-            Text titleText = UIFactory.Label("Title", button.transform, title, 13,
-                enabled ? UIFactory.TextColor : UIFactory.MutedColor, TextAnchor.LowerLeft, FontStyle.Bold);
-            titleText.rectTransform.anchorMin = Vector2.zero;
-            titleText.rectTransform.anchorMax = Vector2.one;
-            titleText.rectTransform.offsetMin = new Vector2(22f, RowHeight * 0.42f);
-            titleText.rectTransform.offsetMax = new Vector2(-10f, -5f);
+            UIFactory.Swatch(rect, 0f, 0f, 3f, RowHeight, blockedReason == null ? chip : UIFactory.FaintColor);
 
-            Text subtitleText = UIFactory.Label("Subtitle", button.transform,
-                enabled ? subtitle : $"{subtitle}   ·   {blockedReason}", 11,
-                enabled ? UIFactory.MutedColor : UIFactory.WarnColor, TextAnchor.UpperLeft);
-            subtitleText.rectTransform.anchorMin = Vector2.zero;
-            subtitleText.rectTransform.anchorMax = Vector2.one;
-            subtitleText.rectTransform.offsetMin = new Vector2(22f, 5f);
-            subtitleText.rectTransform.offsetMax = new Vector2(-10f, -RowHeight * 0.55f);
+            Color titleColor = blockedReason == null ? UIFactory.TextColor : UIFactory.FaintColor;
+
+            // Title on the upper line, cost right-aligned beside it.
+            Text titleText = UIFactory.Label("Title", rect, title, 14, titleColor, TextAnchor.UpperLeft,
+                FontStyle.Bold);
+            UIFactory.Place(titleText.rectTransform, UIFactory.TopLeft, 13f, -7f, width - 110f, 19f);
+
+            if (!string.IsNullOrEmpty(trailing))
+            {
+                Color costColor = blockedReason == null ? UIFactory.TextColor : UIFactory.FaintColor;
+                Text costText = UIFactory.Label("Cost", rect, trailing, 14, costColor, TextAnchor.UpperRight);
+                UIFactory.Place(costText.rectTransform, UIFactory.TopRight, -11f, -7f, 100f, 19f);
+            }
+
+            // Detail on the lower line — the yearly effect, or why it's blocked.
+            Text detailText = UIFactory.Label("Detail", rect,
+                blockedReason ?? detail, 11,
+                blockedReason == null ? UIFactory.MutedColor : UIFactory.WarnColor);
+            UIFactory.Place(detailText.rectTransform, UIFactory.TopLeft, 13f, -26f, width - 24f, 16f);
 
             _rows.Add(button.gameObject);
+        }
+
+        private void Resize(int rowCount)
+        {
+            float height = rowCount == 0
+                ? HeaderHeight - 6f
+                : HeaderHeight + rowCount * (RowHeight + RowGap) - RowGap + BottomPad;
+
+            _root.sizeDelta = new Vector2(PanelWidth, height);
         }
 
         private void ClearRows()

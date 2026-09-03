@@ -10,10 +10,9 @@ using UnityEngine.UI;
 namespace Solarpunk.UI
 {
     /// <summary>
-    /// Assembles the whole placeholder HUD at runtime and keeps it in sync with
-    /// the simulation. Built from code deliberately: it costs nothing to
-    /// regenerate and there's no scene wiring to break while the layout is
-    /// still churning.
+    /// Assembles the HUD at runtime and keeps it in sync with the simulation.
+    /// Built from code deliberately: it regenerates cleanly and there's no scene
+    /// wiring to break while the layout is still churning.
     /// </summary>
     public class GameHUD : MonoBehaviour
     {
@@ -66,7 +65,7 @@ namespace Solarpunk.UI
             _buildPanel = canvasGo.AddComponent<BuildPanel>();
             _buildPanel.Build(canvasGo.transform, buildController, cityGrowth);
 
-            CreateHint(canvasGo.transform);
+            CreateTerrainKey(canvasGo.transform);
             CreateGameOverBanner(canvasGo.transform);
         }
 
@@ -79,44 +78,77 @@ namespace Solarpunk.UI
             go.AddComponent<StandaloneInputModule>();
         }
 
-        private void CreateHint(Transform canvas)
+        /// <summary>Bottom-left key so the hex colours are readable without clicking each one.</summary>
+        private void CreateTerrainKey(Transform canvas)
         {
+            const float width = 300f;
+            const float rowHeight = 22f;
+            const float headerHeight = 30f;
+
+            var entries = new (TerrainRelief relief, string label)[]
+            {
+                (TerrainRelief.Mutable, "Open — build anything"),
+                (TerrainRelief.Waterfall, "Waterfall — Hidrelétrica only"),
+                (TerrainRelief.Coast, "Coast — Maremotriz only"),
+                (TerrainRelief.Mountain, "Mountain — favours wind")
+            };
+
+            float height = headerHeight + entries.Length * rowHeight + 10f;
+            RectTransform panel = UIFactory.Panel("TerrainKey", canvas, UIFactory.PanelColor);
+            UIFactory.Place(panel, UIFactory.BottomLeft, 16f, 44f, width, height);
+
+            Text title = UIFactory.Label("Title", panel, "TERRAIN", 11, UIFactory.FaintColor);
+            title.rectTransform.anchorMin = new Vector2(0f, 1f);
+            title.rectTransform.anchorMax = new Vector2(0f, 1f);
+            title.rectTransform.pivot = new Vector2(0f, 1f);
+            title.rectTransform.anchoredPosition = new Vector2(12f, -10f);
+            title.rectTransform.sizeDelta = new Vector2(width - 24f, 14f);
+
+            for (int i = 0; i < entries.Length; i++)
+            {
+                float y = -(headerHeight + i * rowHeight);
+                UIFactory.Swatch(panel, 12f, y - 4f, 10f, 10f, HexCell.ColorForRelief(entries[i].relief));
+
+                Text label = UIFactory.Label($"Key{i}", panel, entries[i].label, 12, UIFactory.MutedColor);
+                UIFactory.Place(label.rectTransform, UIFactory.TopLeft, 30f, y - 6f, width - 42f, 16f);
+            }
+
             Text hint = UIFactory.Label("Hint", canvas,
-                "Click a hexagon to select it  ·  Space or NEXT YEAR advances a turn", 12, UIFactory.MutedColor,
-                TextAnchor.LowerLeft);
-            hint.rectTransform.anchorMin = new Vector2(0f, 0f);
-            hint.rectTransform.anchorMax = new Vector2(0f, 0f);
-            hint.rectTransform.pivot = new Vector2(0f, 0f);
-            hint.rectTransform.anchoredPosition = new Vector2(18f, 14f);
-            hint.rectTransform.sizeDelta = new Vector2(680f, 20f);
+                "Click a hexagon to inspect and build  ·  Space or NEXT YEAR advances a year", 12,
+                UIFactory.MutedColor);
+            UIFactory.Place(hint.rectTransform, UIFactory.BottomLeft, 16f, 18f, 900f, 18f);
         }
 
         private void CreateGameOverBanner(Transform canvas)
         {
-            _gameOverBanner = UIFactory.Panel("GameOver", canvas, new Color(0.06f, 0.08f, 0.09f, 0.96f));
+            _gameOverBanner = UIFactory.Panel("GameOver", canvas, new Color(0.06f, 0.08f, 0.09f, 0.97f));
             _gameOverBanner.anchorMin = new Vector2(0.5f, 0.5f);
             _gameOverBanner.anchorMax = new Vector2(0.5f, 0.5f);
             _gameOverBanner.pivot = new Vector2(0.5f, 0.5f);
-            _gameOverBanner.sizeDelta = new Vector2(460f, 190f);
+            _gameOverBanner.anchoredPosition = Vector2.zero;
+            _gameOverBanner.sizeDelta = new Vector2(480f, 200f);
 
             _gameOverText = UIFactory.Label("Text", _gameOverBanner, "", 22, UIFactory.TextColor,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
-            _gameOverText.rectTransform.anchorMin = new Vector2(0f, 0.38f);
+            _gameOverText.rectTransform.anchorMin = new Vector2(0f, 0.34f);
             _gameOverText.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _gameOverText.rectTransform.offsetMin = new Vector2(20f, 0f);
-            _gameOverText.rectTransform.offsetMax = new Vector2(-20f, -18f);
+            _gameOverText.rectTransform.offsetMin = new Vector2(24f, 0f);
+            _gameOverText.rectTransform.offsetMax = new Vector2(-24f, -20f);
 
             Button restart = UIFactory.Button("Restart", _gameOverBanner, UIFactory.AccentColor);
             RectTransform restartRect = restart.GetComponent<RectTransform>();
             restartRect.anchorMin = new Vector2(0.5f, 0f);
             restartRect.anchorMax = new Vector2(0.5f, 0f);
             restartRect.pivot = new Vector2(0.5f, 0f);
-            restartRect.anchoredPosition = new Vector2(0f, 26f);
-            restartRect.sizeDelta = new Vector2(200f, 42f);
+            restartRect.anchoredPosition = new Vector2(0f, 28f);
+            restartRect.sizeDelta = new Vector2(210f, 44f);
 
-            Text restartLabel = UIFactory.Label("Label", restart.transform, "PLAY AGAIN", 14,
-                new Color(0.05f, 0.12f, 0.07f), TextAnchor.MiddleCenter, FontStyle.Bold);
-            UIFactory.Stretch(restartLabel.rectTransform, 0f, 0f, 0f, 0f);
+            Text restartLabel = UIFactory.Label("Label", restart.transform, "PLAY AGAIN", 15,
+                new Color(0.04f, 0.11f, 0.06f), TextAnchor.MiddleCenter, FontStyle.Bold);
+            restartLabel.rectTransform.anchorMin = Vector2.zero;
+            restartLabel.rectTransform.anchorMax = Vector2.one;
+            restartLabel.rectTransform.offsetMin = Vector2.zero;
+            restartLabel.rectTransform.offsetMax = Vector2.zero;
 
             restart.onClick.AddListener(() =>
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex));

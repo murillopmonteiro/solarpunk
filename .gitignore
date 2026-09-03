@@ -43,3 +43,6 @@ crashlytics-build.properties
 
 # Package cache (restored automatically)
 Packages/packages-lock.json.bak
+
+# Player builds
+Builds/
