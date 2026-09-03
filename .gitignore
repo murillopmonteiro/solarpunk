@@ -46,3 +46,7 @@ Packages/packages-lock.json.bak
 
 # Player builds
 Builds/
+
+# Unity crash-recovery scratch
+Assets/_Recovery/
+Assets/_Recovery.meta
