@@ -90,27 +90,29 @@ namespace Solarpunk.EditorTools
             var camera = cameraGo.AddComponent<Camera>();
             cameraGo.AddComponent<AudioListener>();
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color(0.09f, 0.13f, 0.16f);
+            // Sunny sky. Solarpunk is optimistic; the old slate grey read as bleak sci-fi.
+            camera.backgroundColor = new Color(0.53f, 0.79f, 0.87f);
             camera.fieldOfView = 45f;
-            // Offset right and pulled back so the board sits clear of the top bar
-            // and the right-hand inspector panel rather than behind them.
+            // Centred in the corridor between the resource capsules on the left
+            // and the inspector panel on the right.
             cameraGo.transform.SetPositionAndRotation(
-                new Vector3(1.15f, 6.6f, -5.5f), Quaternion.Euler(49f, 0f, 0f));
+                new Vector3(0.35f, 6.5f, -5.4f), Quaternion.Euler(49f, 0f, 0f));
             cameraGo.tag = "MainCamera";
 
             // --- Lighting ---
             var keyLightGo = new GameObject("Key Light");
             var keyLight = keyLightGo.AddComponent<Light>();
             keyLight.type = LightType.Directional;
-            keyLight.intensity = 1.1f;
-            keyLight.color = new Color(1f, 0.97f, 0.90f);
+            keyLight.intensity = 1.05f;
+            keyLight.color = new Color(1f, 0.96f, 0.88f);
             keyLightGo.transform.rotation = Quaternion.Euler(52f, -35f, 0f);
 
+            // Warm sky bounce keeps the shaded faces from going muddy.
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.34f, 0.38f, 0.42f);
+            RenderSettings.ambientLight = new Color(0.34f, 0.39f, 0.42f);
 
             // --- Ground slab under the island ---
-            Material groundMaterial = CreateMaterial(GroundMaterialPath, new Color(0.11f, 0.16f, 0.18f), 0.05f);
+            Material groundMaterial = CreateMaterial(GroundMaterialPath, new Color(0.13f, 0.26f, 0.30f), 0.05f);
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
             ground.name = "Ground";
             ground.transform.position = new Vector3(0f, -0.36f, 0f);

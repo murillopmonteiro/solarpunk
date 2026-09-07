@@ -43,12 +43,14 @@ namespace Solarpunk.Grid
 
         public static Color ColorForRelief(TerrainRelief relief)
         {
+            // Deliberately deep: the key light plus ambient bounce lifts these a
+            // long way, and lighter base values wash out to pastel under it.
             return relief switch
             {
-                TerrainRelief.Waterfall => new Color(0.25f, 0.55f, 0.85f),
-                TerrainRelief.Mountain => new Color(0.52f, 0.50f, 0.48f),
-                TerrainRelief.Coast => new Color(0.88f, 0.82f, 0.55f),
-                _ => new Color(0.38f, 0.66f, 0.36f)
+                TerrainRelief.Waterfall => new Color(0.13f, 0.44f, 0.76f),
+                TerrainRelief.Mountain => new Color(0.44f, 0.43f, 0.45f),
+                TerrainRelief.Coast => new Color(0.83f, 0.71f, 0.36f),
+                _ => new Color(0.26f, 0.55f, 0.23f)
             };
         }
 
@@ -57,7 +59,7 @@ namespace Solarpunk.Grid
             if (_selected == selected) return;
             _selected = selected;
 
-            ApplyColor(selected ? Color.Lerp(_baseColor, Color.white, 0.62f) : _baseColor);
+            ApplyColor(selected ? Color.Lerp(_baseColor, Color.white, 0.42f) : _baseColor);
 
             Vector3 p = transform.localPosition;
             p.y = _restingY + (selected ? 0.22f : 0f);

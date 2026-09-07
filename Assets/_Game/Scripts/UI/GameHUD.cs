@@ -22,8 +22,10 @@ namespace Solarpunk.UI
         [SerializeField] private BuildController buildController;
         [SerializeField] private CityGrowth cityGrowth;
 
-        private ResourceBar _resourceBar;
+        private ResourceStack _resources;
         private BuildPanel _buildPanel;
+        private Button _nextTurnButton;
+        private Text _yearLabel;
         private RectTransform _gameOverBanner;
         private Text _gameOverText;
 
@@ -58,13 +60,13 @@ namespace Solarpunk.UI
 
             canvasGo.AddComponent<GraphicRaycaster>();
 
-            _resourceBar = canvasGo.AddComponent<ResourceBar>();
-            _resourceBar.Build(canvasGo.transform);
-            _resourceBar.NextTurnButton.onClick.AddListener(turnManager.AdvanceTurn);
+            _resources = canvasGo.AddComponent<ResourceStack>();
+            _resources.Build(canvasGo.transform);
 
             _buildPanel = canvasGo.AddComponent<BuildPanel>();
             _buildPanel.Build(canvasGo.transform, buildController, cityGrowth);
 
+            CreateTurnControls(canvasGo.transform);
             CreateTerrainKey(canvasGo.transform);
             CreateGameOverBanner(canvasGo.transform);
         }
@@ -78,77 +80,92 @@ namespace Solarpunk.UI
             go.AddComponent<StandaloneInputModule>();
         }
 
+        /// <summary>Year readout and the primary action, anchored bottom-right.</summary>
+        private void CreateTurnControls(Transform canvas)
+        {
+            RectTransform yearPill = UIFactory.Capsule("YearPill", canvas, UIFactory.Ink);
+            UIFactory.Place(yearPill, UIFactory.BottomRight, -18f, 116f, 244f, 44f);
+
+            _yearLabel = UIFactory.Label("Year", yearPill, "YEAR 0", 17, UIFactory.TextColor,
+                TextAnchor.MiddleCenter, FontStyle.Bold);
+            UIFactory.Fill(_yearLabel.rectTransform);
+
+            _nextTurnButton = UIFactory.ChunkyButton("NextTurn", canvas, UIFactory.Leaf, UIFactory.LeafDark,
+                UIFactory.BottomRight, -18f, 30f, 244f, 74f);
+
+            Text label = UIFactory.Label("Label", _nextTurnButton.transform, "NEXT YEAR", 21,
+                new Color(0.05f, 0.16f, 0.08f), TextAnchor.MiddleCenter, FontStyle.Bold);
+            UIFactory.Fill(label.rectTransform);
+        }
+
         /// <summary>Bottom-left key so the hex colours are readable without clicking each one.</summary>
         private void CreateTerrainKey(Transform canvas)
         {
-            const float width = 300f;
-            const float rowHeight = 22f;
-            const float headerHeight = 30f;
+            const float width = 268f;
+            const float rowHeight = 24f;
+            const float headerHeight = 34f;
 
             var entries = new (TerrainRelief relief, string label)[]
             {
-                (TerrainRelief.Mutable, "Open — build anything"),
-                (TerrainRelief.Waterfall, "Waterfall — Hidrelétrica only"),
-                (TerrainRelief.Coast, "Coast — Maremotriz only"),
-                (TerrainRelief.Mountain, "Mountain — favours wind")
+                (TerrainRelief.Mutable, "Open, build anything"),
+                (TerrainRelief.Waterfall, "Waterfall, hydro only"),
+                (TerrainRelief.Coast, "Coast, tidal only"),
+                (TerrainRelief.Mountain, "Mountain, favours wind")
             };
 
-            float height = headerHeight + entries.Length * rowHeight + 10f;
-            RectTransform panel = UIFactory.Panel("TerrainKey", canvas, UIFactory.PanelColor);
-            UIFactory.Place(panel, UIFactory.BottomLeft, 16f, 44f, width, height);
+            // The hint lives inside this card: as loose text it sat grey-on-grass
+            // and failed to read at all.
+            const float hintHeight = 34f;
+            float height = headerHeight + entries.Length * rowHeight + hintHeight + 10f;
 
-            Text title = UIFactory.Label("Title", panel, "TERRAIN", 11, UIFactory.FaintColor);
-            title.rectTransform.anchorMin = new Vector2(0f, 1f);
-            title.rectTransform.anchorMax = new Vector2(0f, 1f);
-            title.rectTransform.pivot = new Vector2(0f, 1f);
-            title.rectTransform.anchoredPosition = new Vector2(12f, -10f);
-            title.rectTransform.sizeDelta = new Vector2(width - 24f, 14f);
+            RectTransform panel = UIFactory.Card("TerrainKey", canvas, UIFactory.Ink);
+            UIFactory.Place(panel, UIFactory.BottomLeft, 18f, 22f, width, height);
+
+            Text title = UIFactory.Label("Title", panel, "TERRAIN", 10, UIFactory.FaintColor);
+            UIFactory.Place(title.rectTransform, UIFactory.TopLeft, 16f, -12f, width - 32f, 14f);
 
             for (int i = 0; i < entries.Length; i++)
             {
                 float y = -(headerHeight + i * rowHeight);
-                UIFactory.Swatch(panel, 12f, y - 4f, 10f, 10f, HexCell.ColorForRelief(entries[i].relief));
+
+                RectTransform dot = UIFactory.Circle($"Dot{i}", panel,
+                    HexCell.ColorForRelief(entries[i].relief), 12f);
+                UIFactory.Place(dot, UIFactory.TopLeft, 16f, y - 3f, 12f, 12f);
 
                 Text label = UIFactory.Label($"Key{i}", panel, entries[i].label, 12, UIFactory.MutedColor);
-                UIFactory.Place(label.rectTransform, UIFactory.TopLeft, 30f, y - 6f, width - 42f, 16f);
+                UIFactory.Place(label.rectTransform, UIFactory.TopLeft, 36f, y - 4f, width - 48f, 16f);
             }
 
-            Text hint = UIFactory.Label("Hint", canvas,
-                "Click a hexagon to inspect and build  ·  Space or NEXT YEAR advances a year", 12,
-                UIFactory.MutedColor);
-            UIFactory.Place(hint.rectTransform, UIFactory.BottomLeft, 16f, 18f, 900f, 18f);
+            Text hint = UIFactory.Label("Hint", panel,
+                "Click a hexagon to build.\nSpace also advances a year.", 11, UIFactory.FaintColor);
+            hint.verticalOverflow = VerticalWrapMode.Overflow;
+            UIFactory.Place(hint.rectTransform, UIFactory.BottomLeft, 16f, 10f, width - 32f, 30f);
         }
 
         private void CreateGameOverBanner(Transform canvas)
         {
-            _gameOverBanner = UIFactory.Panel("GameOver", canvas, new Color(0.06f, 0.08f, 0.09f, 0.97f));
+            _gameOverBanner = UIFactory.Card("GameOver", canvas, UIFactory.InkSolid);
             _gameOverBanner.anchorMin = new Vector2(0.5f, 0.5f);
             _gameOverBanner.anchorMax = new Vector2(0.5f, 0.5f);
             _gameOverBanner.pivot = new Vector2(0.5f, 0.5f);
             _gameOverBanner.anchoredPosition = Vector2.zero;
-            _gameOverBanner.sizeDelta = new Vector2(480f, 200f);
+            _gameOverBanner.sizeDelta = new Vector2(520f, 216f);
 
-            _gameOverText = UIFactory.Label("Text", _gameOverBanner, "", 22, UIFactory.TextColor,
+            _gameOverText = UIFactory.Label("Text", _gameOverBanner, "", 23, UIFactory.TextColor,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
-            _gameOverText.rectTransform.anchorMin = new Vector2(0f, 0.34f);
+            _gameOverText.rectTransform.anchorMin = new Vector2(0f, 0.36f);
             _gameOverText.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _gameOverText.rectTransform.offsetMin = new Vector2(24f, 0f);
-            _gameOverText.rectTransform.offsetMax = new Vector2(-24f, -20f);
+            _gameOverText.rectTransform.offsetMin = new Vector2(26f, 0f);
+            _gameOverText.rectTransform.offsetMax = new Vector2(-26f, -22f);
 
-            Button restart = UIFactory.Button("Restart", _gameOverBanner, UIFactory.AccentColor);
+            Button restart = UIFactory.ChunkyButton("Restart", _gameOverBanner, UIFactory.Leaf,
+                UIFactory.LeafDark, new Vector2(0.5f, 0f), 0f, 30f, 228f, 52f);
             RectTransform restartRect = restart.GetComponent<RectTransform>();
-            restartRect.anchorMin = new Vector2(0.5f, 0f);
-            restartRect.anchorMax = new Vector2(0.5f, 0f);
-            restartRect.pivot = new Vector2(0.5f, 0f);
-            restartRect.anchoredPosition = new Vector2(0f, 28f);
-            restartRect.sizeDelta = new Vector2(210f, 44f);
+            restartRect.anchoredPosition = new Vector2(-114f, 30f);
 
-            Text restartLabel = UIFactory.Label("Label", restart.transform, "PLAY AGAIN", 15,
-                new Color(0.04f, 0.11f, 0.06f), TextAnchor.MiddleCenter, FontStyle.Bold);
-            restartLabel.rectTransform.anchorMin = Vector2.zero;
-            restartLabel.rectTransform.anchorMax = Vector2.one;
-            restartLabel.rectTransform.offsetMin = Vector2.zero;
-            restartLabel.rectTransform.offsetMax = Vector2.zero;
+            Text restartLabel = UIFactory.Label("Label", restart.transform, "PLAY AGAIN", 16,
+                new Color(0.05f, 0.16f, 0.08f), TextAnchor.MiddleCenter, FontStyle.Bold);
+            UIFactory.Fill(restartLabel.rectTransform);
 
             restart.onClick.AddListener(() =>
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex));
@@ -167,14 +184,15 @@ namespace Solarpunk.UI
                 Refresh();
                 selectionController.RefreshSelection();
             };
+            _nextTurnButton.onClick.AddListener(turnManager.AdvanceTurn);
         }
 
         private void Refresh()
         {
             ResourceVector perTurn = turnManager.CalculateTurnDelta();
-            _resourceBar.SetResources(resourceManager.Current, perTurn);
-            _resourceBar.SetTurn(turnManager.CurrentTurn);
-            _resourceBar.NextTurnButton.interactable = !resourceManager.GameOver;
+            _resources.SetResources(resourceManager.Current, perTurn);
+            _yearLabel.text = $"YEAR {turnManager.CurrentTurn}";
+            _nextTurnButton.interactable = !resourceManager.GameOver;
         }
 
         private void ShowGameOver(bool victory)
@@ -183,7 +201,7 @@ namespace Solarpunk.UI
             _gameOverText.text = victory
                 ? $"VICTORY\n\nYou reached year {TurnManager.VictoryTurn}."
                 : "COLLAPSE\n\nSustainability or happiness hit zero.";
-            _gameOverText.color = victory ? UIFactory.AccentColor : UIFactory.WarnColor;
+            _gameOverText.color = victory ? UIFactory.Leaf : UIFactory.WarnColor;
         }
     }
 }

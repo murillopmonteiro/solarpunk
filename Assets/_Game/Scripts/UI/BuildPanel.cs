@@ -8,17 +8,17 @@ using UnityEngine.UI;
 namespace Solarpunk.UI
 {
     /// <summary>
-    /// Right-hand inspector for the selected hex: what the terrain is, what's on
-    /// it, and what can go there. Every option shows its cost and its yearly
-    /// effect up front, so the choice can be made without trial and error.
+    /// Right-hand inspector for the selected hex: what the terrain is, what sits
+    /// on it, and what can go there. Every option carries its cost and its yearly
+    /// effect, so a choice can be made without trial and error.
     /// </summary>
     public class BuildPanel : MonoBehaviour
     {
-        public const float PanelWidth = 348f;
+        public const float PanelWidth = 356f;
 
-        private const float HeaderHeight = 92f;
-        private const float RowHeight = 46f;
-        private const float RowGap = 5f;
+        private const float HeaderHeight = 88f;
+        private const float RowHeight = 52f;
+        private const float RowGap = 6f;
         private const float SidePad = 12f;
         private const float BottomPad = 12f;
 
@@ -28,8 +28,8 @@ namespace Solarpunk.UI
         private RectTransform _root;
         private Text _header;
         private Text _terrainLabel;
-        private RectTransform _terrainSwatch;
-        private Image _terrainSwatchImage;
+        private RectTransform _terrainDot;
+        private Image _terrainDotImage;
         private Text _sectionLabel;
 
         private readonly List<GameObject> _rows = new();
@@ -39,29 +39,26 @@ namespace Solarpunk.UI
             _buildController = buildController;
             _cityGrowth = cityGrowth;
 
-            _root = UIFactory.Panel("BuildPanel", canvas, UIFactory.PanelColor);
-            UIFactory.Place(_root, UIFactory.TopRight, -16f, -(ResourceBar.BarHeight + 14f), PanelWidth, 300f);
+            _root = UIFactory.Card("BuildPanel", canvas, UIFactory.Ink);
+            UIFactory.Place(_root, UIFactory.TopRight, -18f, -18f, PanelWidth, 300f);
 
-            _header = UIFactory.Label("Header", _root, "NO HEX SELECTED", 16, UIFactory.TextColor,
+            _header = UIFactory.Label("Header", _root, "NO HEX SELECTED", 17, UIFactory.TextColor,
                 TextAnchor.UpperLeft, FontStyle.Bold);
-            UIFactory.Place(_header.rectTransform, UIFactory.TopLeft, SidePad, -12f, PanelWidth - SidePad * 2f, 22f);
+            UIFactory.Place(_header.rectTransform, UIFactory.TopLeft, SidePad + 4f, -14f,
+                PanelWidth - SidePad * 2f, 23f);
 
-            _terrainSwatch = UIFactory.Panel("TerrainSwatch", _root, Color.clear);
-            UIFactory.Place(_terrainSwatch, UIFactory.TopLeft, SidePad, -38f, 10f, 10f);
-            _terrainSwatchImage = _terrainSwatch.GetComponent<Image>();
-            _terrainSwatchImage.raycastTarget = false;
+            _terrainDot = UIFactory.Circle("TerrainDot", _root, Color.clear, 12f);
+            UIFactory.Place(_terrainDot, UIFactory.TopLeft, SidePad + 4f, -42f, 12f, 12f);
+            _terrainDotImage = _terrainDot.GetComponent<Image>();
 
             _terrainLabel = UIFactory.Label("Terrain", _root, "Click a hexagon to inspect it", 12,
                 UIFactory.MutedColor);
-            UIFactory.Place(_terrainLabel.rectTransform, UIFactory.TopLeft, SidePad + 16f, -38f,
-                PanelWidth - SidePad * 2f - 16f, 18f);
+            UIFactory.Place(_terrainLabel.rectTransform, UIFactory.TopLeft, SidePad + 22f, -43f,
+                PanelWidth - SidePad * 2f - 22f, 17f);
 
-            UIFactory.Divider(_root, SidePad, -60f, PanelWidth - SidePad * 2f);
-
-            // Sits between the divider and the first row — must clear both.
-            _sectionLabel = UIFactory.Label("Section", _root, "", 11, UIFactory.FaintColor);
-            UIFactory.Place(_sectionLabel.rectTransform, UIFactory.TopLeft, SidePad, -70f,
-                PanelWidth - SidePad * 2f, 15f);
+            _sectionLabel = UIFactory.Label("Section", _root, "", 10, UIFactory.FaintColor);
+            UIFactory.Place(_sectionLabel.rectTransform, UIFactory.TopLeft, SidePad + 4f, -68f,
+                PanelWidth - SidePad * 2f, 14f);
         }
 
         public void Show(HexCell cell)
@@ -72,7 +69,7 @@ namespace Solarpunk.UI
             {
                 _header.text = "NO HEX SELECTED";
                 _terrainLabel.text = "Click a hexagon to inspect it";
-                _terrainSwatchImage.color = Color.clear;
+                _terrainDotImage.color = Color.clear;
                 _sectionLabel.text = "";
                 Resize(0);
                 return;
@@ -80,7 +77,7 @@ namespace Solarpunk.UI
 
             _header.text = $"HEX {cell.coordinates}";
             _terrainLabel.text = TerrainDescription(cell.relief);
-            _terrainSwatchImage.color = HexCell.ColorForRelief(cell.relief);
+            _terrainDotImage.color = HexCell.ColorForRelief(cell.relief);
 
             int rowCount = cell.IsEmpty ? ShowBuildOptions(cell) : ShowBuiltTile(cell);
             Resize(rowCount);
@@ -90,16 +87,16 @@ namespace Solarpunk.UI
         {
             return relief switch
             {
-                TerrainRelief.Waterfall => "Waterfall — the only hydro site",
-                TerrainRelief.Mountain => "Mountain — favours wind",
-                TerrainRelief.Coast => "Coast — the only tidal site",
-                _ => "Open ground — no restriction"
+                TerrainRelief.Waterfall => "Waterfall. Hydro plants only.",
+                TerrainRelief.Mountain => "Mountain. Favours wind.",
+                TerrainRelief.Coast => "Coast. Tidal plants only.",
+                _ => "Open ground. Build anything."
             };
         }
 
         private int ShowBuildOptions(HexCell cell)
         {
-            _sectionLabel.text = "BUILD ON THIS HEX";
+            _sectionLabel.text = "BUILD HERE";
 
             int index = 0;
             foreach (TileDefinition definition in _buildController.Palette)
@@ -108,7 +105,7 @@ namespace Solarpunk.UI
 
                 string blocked = _buildController.BlockReason(cell, definition);
                 string detail = definition.category == TileCategory.City
-                    ? "Grows each year, powers your population"
+                    ? "Grows each year, houses your people"
                     : StatFormat.EffectSummary(definition.perTurnEffect);
 
                 CreateRow(index++, definition.displayName, $"${definition.buildCost:0}", detail, blocked,
@@ -124,8 +121,8 @@ namespace Solarpunk.UI
             bool isCity = built.category == TileCategory.City;
 
             _sectionLabel.text = isCity
-                ? $"BUILT — {built.displayName.ToUpper()}  ·  LEVEL {cell.cityLevel}"
-                : $"BUILT — {built.displayName.ToUpper()}";
+                ? $"BUILT: {built.displayName.ToUpper()}, LEVEL {cell.cityLevel}"
+                : $"BUILT: {built.displayName.ToUpper()}";
 
             int index = 0;
 
@@ -138,18 +135,18 @@ namespace Solarpunk.UI
             {
                 float cost = _cityGrowth.ManualUpgradeCost(cell.cityLevel);
                 CreateRow(index++, $"Upgrade to level {cell.cityLevel + 1}", $"${cost:0}",
-                    "Instant, skips waiting for growth", null, UIFactory.AccentColor,
+                    "Instant, skips waiting for growth", null, UIFactory.Leaf,
                     () => _cityGrowth.TryManualUpgrade(cell));
             }
 
             CreateRow(index++, "Demolish", $"+${built.buildCost * 0.5f:0}",
-                "Clears the hex and refunds half the cost", null, UIFactory.WarnColor,
+                "Clears the hex, refunds half the cost", null, UIFactory.WarnColor,
                 () => _buildController.Demolish(cell));
 
             return index;
         }
 
-        /// <param name="onClick">null makes the row a read-only info strip.</param>
+        /// <param name="onClick">null makes the row a read-only info card.</param>
         private void CreateRow(int index, string title, string trailing, string detail, string blockedReason,
             Color chip, Action onClick)
         {
@@ -157,7 +154,7 @@ namespace Solarpunk.UI
             float y = -(HeaderHeight + index * (RowHeight + RowGap));
             float width = PanelWidth - SidePad * 2f;
 
-            Color background = blockedReason == null ? UIFactory.RowColor : UIFactory.RowDisabledColor;
+            Color background = blockedReason == null ? UIFactory.Surface : UIFactory.SurfaceMuted;
             Button button = UIFactory.Button(title, _root, background);
             RectTransform rect = button.GetComponent<RectTransform>();
             UIFactory.Place(rect, UIFactory.TopLeft, SidePad, y, width, RowHeight);
@@ -165,27 +162,28 @@ namespace Solarpunk.UI
             button.interactable = interactive;
             if (interactive) button.onClick.AddListener(() => onClick());
 
-            UIFactory.Swatch(rect, 0f, 0f, 3f, RowHeight, blockedReason == null ? chip : UIFactory.FaintColor);
+            RectTransform badge = UIFactory.Circle("Badge", rect,
+                blockedReason == null ? chip : UIFactory.FaintColor, 28f);
+            UIFactory.Place(badge, UIFactory.TopLeft, 11f, -12f, 28f, 28f);
 
             Color titleColor = blockedReason == null ? UIFactory.TextColor : UIFactory.FaintColor;
 
-            // Title on the upper line, cost right-aligned beside it.
             Text titleText = UIFactory.Label("Title", rect, title, 14, titleColor, TextAnchor.UpperLeft,
                 FontStyle.Bold);
-            UIFactory.Place(titleText.rectTransform, UIFactory.TopLeft, 13f, -7f, width - 110f, 19f);
+            UIFactory.Place(titleText.rectTransform, UIFactory.TopLeft, 49f, -9f, width - 145f, 19f);
 
             if (!string.IsNullOrEmpty(trailing))
             {
-                Color costColor = blockedReason == null ? UIFactory.TextColor : UIFactory.FaintColor;
-                Text costText = UIFactory.Label("Cost", rect, trailing, 14, costColor, TextAnchor.UpperRight);
-                UIFactory.Place(costText.rectTransform, UIFactory.TopRight, -11f, -7f, 100f, 19f);
+                Color costColor = blockedReason == null ? UIFactory.MoneyColor : UIFactory.FaintColor;
+                Text costText = UIFactory.Label("Cost", rect, trailing, 14, costColor,
+                    TextAnchor.UpperRight, FontStyle.Bold);
+                UIFactory.Place(costText.rectTransform, UIFactory.TopRight, -13f, -9f, 92f, 19f);
             }
 
-            // Detail on the lower line — the yearly effect, or why it's blocked.
             Text detailText = UIFactory.Label("Detail", rect,
                 blockedReason ?? detail, 11,
                 blockedReason == null ? UIFactory.MutedColor : UIFactory.WarnColor);
-            UIFactory.Place(detailText.rectTransform, UIFactory.TopLeft, 13f, -26f, width - 24f, 16f);
+            UIFactory.Place(detailText.rectTransform, UIFactory.TopLeft, 49f, -29f, width - 58f, 16f);
 
             _rows.Add(button.gameObject);
         }
@@ -193,7 +191,7 @@ namespace Solarpunk.UI
         private void Resize(int rowCount)
         {
             float height = rowCount == 0
-                ? HeaderHeight - 6f
+                ? HeaderHeight - 12f
                 : HeaderHeight + rowCount * (RowHeight + RowGap) - RowGap + BottomPad;
 
             _root.sizeDelta = new Vector2(PanelWidth, height);
