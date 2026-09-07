@@ -24,6 +24,8 @@ namespace Solarpunk.Tiles
 
         public static GameObject Create(TileDefinition definition)
         {
+            if (definition.structurePrefab != null) return CreateFromPrefab(definition);
+
             var root = new GameObject($"Structure_{definition.displayName}");
             Material material = CreateColoredMaterial(definition.placeholderColor);
 
@@ -47,6 +49,20 @@ namespace Solarpunk.Tiles
             }
 
             return root;
+        }
+
+        private static GameObject CreateFromPrefab(TileDefinition definition)
+        {
+            GameObject instance = Object.Instantiate(definition.structurePrefab);
+            instance.name = $"Structure_{definition.displayName}";
+
+            // Same rule as the primitives: nothing on a hex may intercept its click.
+            foreach (Collider collider in instance.GetComponentsInChildren<Collider>())
+            {
+                Object.Destroy(collider);
+            }
+
+            return instance;
         }
 
         private static void AddPart(GameObject parent, PrimitiveType type, Material material, Vector3 localPos, Vector3 localScale)

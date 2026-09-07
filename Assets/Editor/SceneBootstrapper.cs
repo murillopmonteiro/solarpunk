@@ -28,6 +28,10 @@ namespace Solarpunk.EditorTools
         {
             Mesh hexMesh = HexMeshFactory.GenerateAndSave();
             CreateHexPrefab(hexMesh);
+
+            // Must precede the tile assets: the city definition references this prefab.
+            CityModelBuilder.BuildPrefab();
+
             TileDataFactory.GenerateAll();
             BuildScene();
         }

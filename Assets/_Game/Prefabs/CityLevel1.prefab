@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2996467448987833442
+--- !u!1 &2805787734874224293
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,48 +8,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6536885923610524026}
-  - component: {fileID: 1379477285335496330}
-  - component: {fileID: 2849924055722401526}
-  - component: {fileID: 8513504618541855536}
-  - component: {fileID: 6174396642512478821}
+  - component: {fileID: 3861469204669614138}
+  - component: {fileID: 8714027989682603439}
+  - component: {fileID: 2832544731218220071}
   m_Layer: 0
-  m_Name: HexCell
+  m_Name: CityLevel1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6536885923610524026
+--- !u!4 &3861469204669614138
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2996467448987833442}
+  m_GameObject: {fileID: 2805787734874224293}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalScale: {x: 1.32, y: 1.32, z: 1.32}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &1379477285335496330
+--- !u!33 &8714027989682603439
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2996467448987833442}
-  m_Mesh: {fileID: 4300000, guid: 2156c4c69947b754c8eeca5d1c7ce85b, type: 2}
---- !u!23 &2849924055722401526
+  m_GameObject: {fileID: 2805787734874224293}
+  m_Mesh: {fileID: 4702651839026981332, guid: 86c9698aa0aaab94383f5d5f9e761c79, type: 3}
+--- !u!23 &2832544731218220071
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2996467448987833442}
+  m_GameObject: {fileID: 2805787734874224293}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -68,7 +66,12 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 78bb1e6310fd8a44b823284e07eb0883, type: 2}
+  - {fileID: 2100000, guid: 740b8b87d71df84488de753693339589, type: 2}
+  - {fileID: 2100000, guid: 499b620fd834f704a96ca8b12e408157, type: 2}
+  - {fileID: 2100000, guid: 6641cfe2c4869024f9e895287c61cbe5, type: 2}
+  - {fileID: 2100000, guid: 324e1dd920a65a344a928de25fdeb18a, type: 2}
+  - {fileID: 2100000, guid: f98ab9ef0f9299e43a0e8b78ae77629b, type: 2}
+  - {fileID: 2100000, guid: a7381bccf190e37458a0aa0da84bb83b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -91,44 +94,3 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &8513504618541855536
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2996467448987833442}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 2156c4c69947b754c8eeca5d1c7ce85b, type: 2}
---- !u!114 &6174396642512478821
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2996467448987833442}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4293730ece8005c4e906c3e133c02125, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Grid.HexCell
-  coordinates:
-    q: 0
-    r: 0
-  relief: 0
-  builtTile: {fileID: 0}
-  cityLevel: 1
-  tileRenderer: {fileID: 2849924055722401526}

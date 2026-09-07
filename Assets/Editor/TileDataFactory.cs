@@ -54,7 +54,8 @@ namespace Solarpunk.EditorTools
             {
                 // Per-turn effect for the city comes from CityGrowth (scales with level), not this vector.
                 Create("City", TileCategory.City, TerrainRelief.Mutable, 200f,
-                    ResourceVector.Zero, false, new Color(0.93f, 0.90f, 0.82f)),
+                    ResourceVector.Zero, false, new Color(0.93f, 0.90f, 0.82f),
+                    AssetDatabase.LoadAssetAtPath<GameObject>(CityModelBuilder.PrefabPath)),
 
                 Create("Hidreletrica", TileCategory.PowerPlant, TerrainRelief.Waterfall, 800f,
                     new ResourceVector { energy = 40f, sustainability = 1f, money = -5f }, false,
@@ -100,7 +101,8 @@ namespace Solarpunk.EditorTools
         }
 
         private static TileDefinition Create(string name, TileCategory category, TerrainRelief relief,
-            float cost, ResourceVector effect, bool requiresExtraction, Color placeholderColor)
+            float cost, ResourceVector effect, bool requiresExtraction, Color placeholderColor,
+            GameObject structurePrefab = null)
         {
             var asset = ScriptableObject.CreateInstance<TileDefinition>();
             asset.displayName = name;
@@ -110,6 +112,7 @@ namespace Solarpunk.EditorTools
             asset.perTurnEffect = effect;
             asset.requiresExtraction = requiresExtraction;
             asset.placeholderColor = placeholderColor;
+            asset.structurePrefab = structurePrefab;
 
             string path = $"{OutputDir}/{name}.asset";
             AssetDatabase.DeleteAsset(path);

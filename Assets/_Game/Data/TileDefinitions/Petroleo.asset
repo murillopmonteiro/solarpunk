@@ -24,3 +24,4 @@ MonoBehaviour:
     happiness: 0
   requiresExtraction: 1
   placeholderColor: {r: 0.36, g: 0.26, b: 0.2, a: 1}
+  structurePrefab: {fileID: 0}
