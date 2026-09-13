@@ -141,8 +141,8 @@ namespace Solarpunk.EditorTools
             var citySo = new SerializedObject(cityGrowth);
             citySo.FindProperty("resourceManager").objectReferenceValue = resourceManager;
             citySo.FindProperty("happinessHealthyThreshold").floatValue = 30f;
-            // G = [E, M, S, P, H] per level. Level 1 is exactly this; level n is n times it.
-            SetResourceVector(citySo.FindProperty("perLevelEffect"),
+            // The city's G = [E, M, S, P, H]. Constant: every level contributes this same vector.
+            SetResourceVector(citySo.FindProperty("cityEffect"),
                 new ResourceVector { energy = -8f, money = -2f, sustainability = -1f, population = 5f, happiness = 0f });
             citySo.ApplyModifiedPropertiesWithoutUndo();
 

@@ -2,6 +2,7 @@ using Solarpunk.Core;
 using Solarpunk.Grid;
 using Solarpunk.Managers;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Solarpunk.Tiles
 {
@@ -22,8 +23,11 @@ namespace Solarpunk.Tiles
         [Tooltip("Money cost of a manual upgrade, indexed by current level (1-10).")]
         [SerializeField] private AnimationCurve manualUpgradeCost = AnimationCurve.Linear(1, 200, 10, 2000);
 
-        [Tooltip("Per-level per-turn resource effect, indexed by city level (1-10).")]
-        [SerializeField] private ResourceVector perLevelEffect;
+        // FormerlySerializedAs carries the value across the rename, so scenes saved
+        // before this keep their numbers instead of silently deserialising to zero.
+        [Tooltip("The city's per-turn G = [E, M, S, P, H]. Flat: it does not scale with level.")]
+        [FormerlySerializedAs("perLevelEffect")]
+        [SerializeField] private ResourceVector cityEffect;
 
         public bool TryAutoTick(HexCell cityCell)
         {
@@ -46,6 +50,11 @@ namespace Solarpunk.Tiles
             return true;
         }
 
-        public ResourceVector GetEffectForLevel(int level) => perLevelEffect * level;
+        /// <summary>
+        /// Constant by design. This used to return cityEffect * level, which made a
+        /// level 5 city drain five times a level 1 one and ended runs on happiness
+        /// around year 9, long before sustainability mattered.
+        /// </summary>
+        public ResourceVector GetPerTurnEffect() => cityEffect;
     }
 }

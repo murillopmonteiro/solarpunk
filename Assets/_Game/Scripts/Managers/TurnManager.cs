@@ -33,7 +33,7 @@ namespace Solarpunk.Managers
                 if (hex.builtTile == null) continue;
 
                 delta += hex.builtTile.category == TileCategory.City
-                    ? cityGrowth.GetEffectForLevel(hex.cityLevel)
+                    ? cityGrowth.GetPerTurnEffect()
                     : hex.builtTile.perTurnEffect;
             }
 

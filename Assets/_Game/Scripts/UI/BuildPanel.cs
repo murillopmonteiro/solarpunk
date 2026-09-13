@@ -127,7 +127,7 @@ namespace Solarpunk.UI
             int index = 0;
 
             string effect = isCity
-                ? StatFormat.EffectSummary(_cityGrowth.GetEffectForLevel(cell.cityLevel))
+                ? StatFormat.EffectSummary(_cityGrowth.GetPerTurnEffect())
                 : StatFormat.EffectSummary(built.perTurnEffect);
             CreateRow(index++, "Current output", "", effect, null, built.placeholderColor, null);
 
