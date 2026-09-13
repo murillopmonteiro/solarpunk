@@ -52,10 +52,12 @@ namespace Solarpunk.EditorTools
 
             var results = new List<TileDefinition>
             {
-                // Per-turn effect for the city comes from CityGrowth (scales with level), not this vector.
+                // Per-turn effect for the city comes from CityGrowth (scales with level), not this
+                // vector. The bonus here is the one-off happiness lift on founding.
                 Create("City", TileCategory.City, TerrainRelief.Mutable, 200f,
                     ResourceVector.Zero, false, new Color(0.93f, 0.90f, 0.82f),
-                    AssetDatabase.LoadAssetAtPath<GameObject>(CityModelBuilder.PrefabPath)),
+                    AssetDatabase.LoadAssetAtPath<GameObject>(CityModelBuilder.PrefabPath),
+                    new ResourceVector { happiness = 5f }),
 
                 Create("Hidreletrica", TileCategory.PowerPlant, TerrainRelief.Waterfall, 800f,
                     new ResourceVector { energy = 40f, sustainability = 1f, money = -5f }, false,
@@ -82,7 +84,7 @@ namespace Solarpunk.EditorTools
                     new Color(0.55f, 0.62f, 0.30f)),
 
                 Create("Carvao", TileCategory.PowerPlant, TerrainRelief.Mutable, 300f,
-                    new ResourceVector { energy = 35f, sustainability = -6f, money = -3f }, true,
+                    new ResourceVector { energy = 10f, sustainability = -3f, money = -3f }, true,
                     new Color(0.26f, 0.26f, 0.28f)),
 
                 Create("Petroleo", TileCategory.PowerPlant, TerrainRelief.Mutable, 900f,
@@ -90,7 +92,7 @@ namespace Solarpunk.EditorTools
                     new Color(0.36f, 0.26f, 0.20f)),
 
                 Create("Extracao", TileCategory.Extraction, TerrainRelief.Mutable, 500f,
-                    new ResourceVector { money = 20f, sustainability = -2f }, false,
+                    new ResourceVector { money = 20f, sustainability = -1f }, false,
                     new Color(0.85f, 0.50f, 0.22f)),
             };
 
@@ -102,7 +104,7 @@ namespace Solarpunk.EditorTools
 
         private static TileDefinition Create(string name, TileCategory category, TerrainRelief relief,
             float cost, ResourceVector effect, bool requiresExtraction, Color placeholderColor,
-            GameObject structurePrefab = null)
+            GameObject structurePrefab = null, ResourceVector onBuildBonus = default)
         {
             var asset = ScriptableObject.CreateInstance<TileDefinition>();
             asset.displayName = name;
@@ -113,6 +115,7 @@ namespace Solarpunk.EditorTools
             asset.requiresExtraction = requiresExtraction;
             asset.placeholderColor = placeholderColor;
             asset.structurePrefab = structurePrefab;
+            asset.onBuildBonus = onBuildBonus;
 
             string path = $"{OutputDir}/{name}.asset";
             AssetDatabase.DeleteAsset(path);

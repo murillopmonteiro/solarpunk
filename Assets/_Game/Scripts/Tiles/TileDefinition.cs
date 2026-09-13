@@ -23,6 +23,9 @@ namespace Solarpunk.Tiles
         [Tooltip("Per-turn effect on the 5 global resources while this tile is active.")]
         public ResourceVector perTurnEffect;
 
+        [Tooltip("One-off effect applied the moment this tile is built, on top of its build cost.")]
+        public ResourceVector onBuildBonus;
+
         [Tooltip("Power plants only: needs an active Extraction tile to operate without penalty.")]
         public bool requiresExtraction;
 

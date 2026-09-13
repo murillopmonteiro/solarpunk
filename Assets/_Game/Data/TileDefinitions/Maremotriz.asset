@@ -22,6 +22,12 @@ MonoBehaviour:
     sustainability: 2
     population: 0
     happiness: 0
+  onBuildBonus:
+    energy: 0
+    money: 0
+    sustainability: 0
+    population: 0
+    happiness: 0
   requiresExtraction: 0
   placeholderColor: {r: 0.3, g: 0.8, b: 0.78, a: 1}
   structurePrefab: {fileID: 0}

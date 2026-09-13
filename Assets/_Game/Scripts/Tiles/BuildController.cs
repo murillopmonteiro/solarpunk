@@ -58,6 +58,9 @@ namespace Solarpunk.Tiles
             cell.builtTile = definition;
             cell.SetStructure(StructureFactory.Create(definition));
 
+            // Founding bonus, e.g. the city's one-off happiness lift.
+            resourceManager.ApplyInstant(definition.onBuildBonus);
+
             if (definition.category == TileCategory.City)
             {
                 cell.cityLevel = 1;

@@ -17,9 +17,15 @@ MonoBehaviour:
   requiredRelief: 0
   buildCost: 300
   perTurnEffect:
-    energy: 35
+    energy: 10
     money: -3
-    sustainability: -6
+    sustainability: -3
+    population: 0
+    happiness: 0
+  onBuildBonus:
+    energy: 0
+    money: 0
+    sustainability: 0
     population: 0
     happiness: 0
   requiresExtraction: 1

@@ -10,11 +10,20 @@ namespace Solarpunk.Managers
     /// </summary>
     public class ResourceManager : MonoBehaviour
     {
+        /// <summary>
+        /// Sustainability runs on a 0-1000 budget, not 0-100. The balance triads are
+        /// written as whole numbers per year (a coal setup drains 5), and 1000 is what
+        /// makes that arithmetic land: 1000 / 5 = collapse at year 200.
+        /// </summary>
+        public const float SustainabilityMax = 1000f;
+
+        private const float HappinessMax = 100f;
+
         [SerializeField] private float startingEnergy = 20f;
         [SerializeField] private float startingMoney = 2000f;
-        [SerializeField] private float startingSustainability = 100f;
+        [SerializeField] private float startingSustainability = SustainabilityMax;
         [SerializeField] private float startingPopulation = 10f;
-        [SerializeField] private float startingHappiness = 100f;
+        [SerializeField] private float startingHappiness = HappinessMax;
 
         public ResourceVector Current { get; private set; }
         public bool GameOver { get; private set; }
@@ -59,6 +68,23 @@ namespace Solarpunk.Managers
             OnResourcesChanged?.Invoke(Current);
         }
 
+        /// <summary>
+        /// One-off adjustment such as a tile's on-build bonus. Clamps like a turn
+        /// does, but skips the blackout penalty and the loss check, since nothing
+        /// here represents a year passing.
+        /// </summary>
+        public void ApplyInstant(ResourceVector delta)
+        {
+            ResourceVector next = Current + delta;
+            next.sustainability = Mathf.Clamp(next.sustainability, 0f, SustainabilityMax);
+            next.happiness = Mathf.Clamp(next.happiness, 0f, HappinessMax);
+            next.population = Mathf.Max(0f, next.population);
+            next.energy = Mathf.Max(0f, next.energy);
+
+            Current = next;
+            OnResourcesChanged?.Invoke(Current);
+        }
+
         /// <summary>Applies one turn's worth of accumulated tile effects.</summary>
         public void ApplyTurn(ResourceVector turnDelta)
         {
@@ -73,8 +99,8 @@ namespace Solarpunk.Managers
                 next.energy = 0f;
             }
 
-            next.sustainability = Mathf.Clamp(next.sustainability, 0f, 100f);
-            next.happiness = Mathf.Clamp(next.happiness, 0f, 100f);
+            next.sustainability = Mathf.Clamp(next.sustainability, 0f, SustainabilityMax);
+            next.happiness = Mathf.Clamp(next.happiness, 0f, HappinessMax);
             next.population = Mathf.Max(0f, next.population);
 
             Current = next;

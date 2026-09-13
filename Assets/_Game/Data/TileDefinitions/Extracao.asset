@@ -19,7 +19,13 @@ MonoBehaviour:
   perTurnEffect:
     energy: 0
     money: 20
-    sustainability: -2
+    sustainability: -1
+    population: 0
+    happiness: 0
+  onBuildBonus:
+    energy: 0
+    money: 0
+    sustainability: 0
     population: 0
     happiness: 0
   requiresExtraction: 0

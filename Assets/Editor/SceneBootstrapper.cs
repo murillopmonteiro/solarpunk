@@ -141,8 +141,9 @@ namespace Solarpunk.EditorTools
             var citySo = new SerializedObject(cityGrowth);
             citySo.FindProperty("resourceManager").objectReferenceValue = resourceManager;
             citySo.FindProperty("happinessHealthyThreshold").floatValue = 30f;
+            // G = [E, M, S, P, H] per level. Level 1 is exactly this; level n is n times it.
             SetResourceVector(citySo.FindProperty("perLevelEffect"),
-                new ResourceVector { energy = -8f, population = 5f, happiness = 2f, sustainability = -1f });
+                new ResourceVector { energy = -8f, money = -2f, sustainability = -1f, population = 5f, happiness = 0f });
             citySo.ApplyModifiedPropertiesWithoutUndo();
 
             var turnManager = AddChild<TurnManager>(managersRoot, "TurnManager");
