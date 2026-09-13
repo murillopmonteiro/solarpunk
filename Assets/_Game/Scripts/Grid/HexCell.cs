@@ -75,7 +75,7 @@ namespace Solarpunk.Grid
 
         public void ClearStructure()
         {
-            if (_structure != null) Destroy(_structure);
+            StructureFactory.DestroySafely(_structure);
             _structure = null;
         }
 

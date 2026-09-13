@@ -1,0 +1,16 @@
+{
+    "name": "Solarpunk.Editor",
+    "rootNamespace": "Solarpunk.EditorTools",
+    "references": [
+        "Solarpunk.Core",
+        "Solarpunk.Game",
+        "Solarpunk.UI",
+        "Solarpunk.Dev",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "autoReferenced": true,
+    "noEngineReferences": false
+}
