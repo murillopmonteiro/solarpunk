@@ -31,8 +31,15 @@ namespace Solarpunk.Managers
         public event Action<ResourceVector> OnResourcesChanged;
         public event Action<bool> OnGameEnded; // true = victory, false = defeat
 
-        private void Awake()
+        private void Awake() => Initialize();
+
+        /// <summary>
+        /// Sets the opening stats. Awake calls this in play mode; tests call it
+        /// directly, since Awake does not run for a component added in edit mode.
+        /// </summary>
+        public void Initialize()
         {
+            GameOver = false;
             Current = new ResourceVector
             {
                 energy = startingEnergy,

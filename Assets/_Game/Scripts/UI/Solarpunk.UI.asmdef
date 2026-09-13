@@ -1,0 +1,11 @@
+{
+    "name": "Solarpunk.UI",
+    "rootNamespace": "Solarpunk.UI",
+    "references": [
+        "Solarpunk.Core",
+        "Solarpunk.Game",
+        "UnityEngine.UI"
+    ],
+    "autoReferenced": true,
+    "noEngineReferences": false
+}

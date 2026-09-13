@@ -1,0 +1,7 @@
+{
+    "name": "Solarpunk.Core",
+    "rootNamespace": "Solarpunk.Core",
+    "references": [],
+    "autoReferenced": true,
+    "noEngineReferences": false
+}

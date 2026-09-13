@@ -10,6 +10,18 @@ namespace Solarpunk.Tiles
     /// </summary>
     public static class StructureFactory
     {
+        /// <summary>
+        /// Object.Destroy throws outside play mode, which made every build path
+        /// untestable. This picks the right call for the current context.
+        /// </summary>
+        internal static void DestroySafely(Object target)
+        {
+            if (target == null) return;
+
+            if (Application.isPlaying) Object.Destroy(target);
+            else Object.DestroyImmediate(target);
+        }
+
         public static Material CreateColoredMaterial(Color color)
         {
             Shader shader = Shader.Find("Standard")
@@ -59,7 +71,7 @@ namespace Solarpunk.Tiles
             // Same rule as the primitives: nothing on a hex may intercept its click.
             foreach (Collider collider in instance.GetComponentsInChildren<Collider>())
             {
-                Object.Destroy(collider);
+                DestroySafely(collider);
             }
 
             return instance;
@@ -75,7 +87,7 @@ namespace Solarpunk.Tiles
 
             // Structures must never intercept the hex-selection raycast.
             Collider collider = part.GetComponent<Collider>();
-            if (collider != null) Object.Destroy(collider);
+            DestroySafely(collider);
         }
     }
 }

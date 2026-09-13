@@ -1,0 +1,10 @@
+{
+    "name": "Solarpunk.Dev",
+    "rootNamespace": "Solarpunk.Dev",
+    "references": [
+        "Solarpunk.Core",
+        "Solarpunk.Game"
+    ],
+    "autoReferenced": true,
+    "noEngineReferences": false
+}

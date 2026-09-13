@@ -1,0 +1,22 @@
+{
+    "name": "Solarpunk.Tests",
+    "rootNamespace": "Solarpunk.Tests",
+    "references": [
+        "Solarpunk.Core",
+        "Solarpunk.Game",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "overrideReferences": true,
+    "autoReferenced": false,
+    "noEngineReferences": false
+}
