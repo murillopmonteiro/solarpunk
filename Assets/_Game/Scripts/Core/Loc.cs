@@ -103,6 +103,18 @@ namespace Solarpunk.Core
             // Names the language the button switches *to*, in that language.
             ["hud.switchLanguage"] = ("PORTUGUÊS", "ENGLISH"),
 
+            // Admin mode (F1)
+            ["admin.title"] = ("ADMIN MODE  ·  F1", "MODO ADMIN  ·  F1"),
+            ["admin.money"] = ("+$1000", "+$1000"),
+            ["admin.research"] = ("+500 research", "+500 de pesquisa"),
+            ["admin.unlockAll"] = ("Unlock all research", "Liberar toda a pesquisa"),
+            ["admin.refill"] = ("Refill sustain + happy", "Encher sustent. + felic."),
+            ["admin.skipYears"] = ("Skip 10 years", "Pular 10 anos"),
+            ["admin.event"] = ("Draw an event card", "Sortear um evento"),
+            ["admin.invincibleOff"] = ("Invincible: OFF", "Invencível: NÃO"),
+            ["admin.invincibleOn"] = ("Invincible: ON", "Invencível: SIM"),
+            ["admin.set"] = ("SET", "OK"),
+
             // Resource pills
             ["res.energy"] = ("ENERGY", "ENERGIA"),
             ["res.money"] = ("MONEY", "DINHEIRO"),

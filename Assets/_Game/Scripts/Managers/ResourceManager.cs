@@ -28,6 +28,9 @@ namespace Solarpunk.Managers
         public ResourceVector Current { get; private set; }
         public bool GameOver { get; private set; }
 
+        /// <summary>Admin mode: sustainability or happiness at zero no longer ends the run.</summary>
+        public bool Invincible { get; set; }
+
         public event Action<ResourceVector> OnResourcesChanged;
         public event Action<bool> OnGameEnded; // true = victory, false = defeat
 
@@ -83,6 +86,26 @@ namespace Solarpunk.Managers
             OnResourcesChanged?.Invoke(Current);
         }
 
+        /// <summary>
+        /// Admin mode: puts one stat at an exact number. Held to the same ranges a
+        /// year enforces (sustainability 0-1000, happiness 0-100, population and
+        /// energy not below 0; money is free, debt included), or the next turn would
+        /// snap it back. No defeat check: nothing here is a year passing.
+        /// </summary>
+        public void SetStat(ResourceType type, float value)
+        {
+            value = type switch
+            {
+                ResourceType.Sustainability => Mathf.Clamp(value, 0f, SustainabilityMax),
+                ResourceType.Happiness => Mathf.Clamp(value, 0f, HappinessMax),
+                ResourceType.Money => value,
+                _ => Mathf.Max(0f, value)
+            };
+
+            Current = Current.With(type, value);
+            OnResourcesChanged?.Invoke(Current);
+        }
+
         /// <summary>Applies one turn's worth of accumulated tile effects.</summary>
         public void ApplyTurn(ResourceVector turnDelta)
         {
@@ -104,7 +127,7 @@ namespace Solarpunk.Managers
             Current = next;
             OnResourcesChanged?.Invoke(Current);
 
-            if (Current.sustainability <= 0f || Current.happiness <= 0f)
+            if (!Invincible && (Current.sustainability <= 0f || Current.happiness <= 0f))
             {
                 GameOver = true;
                 OnGameEnded?.Invoke(false);

@@ -103,6 +103,25 @@ namespace Solarpunk.Research
             _unlockedNames.Add(node.name);
         }
 
+        /// <summary>
+        /// Admin and harness hook: buys every node, free. Repeats passes until nothing
+        /// new unlocks, since prerequisites gate the order.
+        /// </summary>
+        public void UnlockAll()
+        {
+            for (bool progress = true; progress;)
+            {
+                progress = false;
+                foreach (ResearchNode node in tree)
+                {
+                    if (node == null || _unlocked.Contains(node) || !PrerequisitesMet(node)) continue;
+                    MarkUnlocked(node);
+                    progress = true;
+                }
+            }
+            OnResearchChanged?.Invoke();
+        }
+
         /// <summary>Test and harness hook: grants points without a year passing.</summary>
         public void AddPoints(float amount)
         {

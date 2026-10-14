@@ -29,6 +29,7 @@ namespace Solarpunk.UI
         private ResourceStack _resources;
         private BuildPanel _buildPanel;
         private ResearchPanel _researchPanel;
+        private AdminPanel _adminPanel;
         private Button _nextTurnButton;
         private Text _researchLabel;
         private Text _yearLabel;
@@ -68,10 +69,20 @@ namespace Solarpunk.UI
 
         private void Update()
         {
+            if (_adminPanel != null && Input.GetKeyDown(AdminPanel.ToggleKey)) _adminPanel.Toggle();
+
             if (Input.GetKeyDown(KeyCode.Escape) && _researchPanel.IsOpen) _researchPanel.Show(false);
 
-            // Space must not tick a year away while the player is reading the tree.
-            if (Input.GetKeyDown(KeyCode.Space) && !_researchPanel.IsOpen) turnManager.AdvanceTurn();
+            // Space must not tick a year away while the player is reading the tree,
+            // or while typing a number into the admin panel.
+            if (Input.GetKeyDown(KeyCode.Space) && !_researchPanel.IsOpen && !TypingInField())
+                turnManager.AdvanceTurn();
+        }
+
+        private static bool TypingInField()
+        {
+            GameObject focused = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+            return focused != null && focused.TryGetComponent(out InputField field) && field.isFocused;
         }
 
         private void BuildCanvas()
@@ -103,6 +114,13 @@ namespace Solarpunk.UI
             CreateTurnControls(canvasGo.transform);
             CreateTerrainKey(canvasGo.transform);
             CreateGameOverBanner(canvasGo.transform);
+
+            // Cheats exist only in the Editor and development builds; a release build has no panel and F1 does nothing.
+            if (Debug.isDebugBuild)
+            {
+                _adminPanel = canvasGo.AddComponent<AdminPanel>();
+                _adminPanel.Build(canvasGo.transform, resourceManager, turnManager, researchManager, randomEvents);
+            }
 
             // Built last so the overlay sorts above every other piece of the HUD.
             _researchPanel = canvasGo.AddComponent<ResearchPanel>();

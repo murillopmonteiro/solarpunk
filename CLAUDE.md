@@ -313,6 +313,14 @@ in Fredoka, the rest in Nunito; a missing font file falls back to the built-in o
 silently, which `SceneValidator` catches. Unity `Text` truncates a line taller than
 its rect instead of clipping it, so a big number in a tight rect simply vanishes.
 
+**Admin mode is F1** (`UI/AdminPanel`): +$1000, +500 research, unlock all research,
+refill sustainability and happiness, skip 10 years, draw an event card, and an
+invincible toggle (`ResourceManager.Invincible` skips the defeat check), plus a row
+that sets any of the five stats to an exact number (`ResourceManager.SetStat`, held
+to each stat's range). It exists only where
+`Debug.isDebugBuild` is true: the Editor and development builds (which is what
+`PlayerBuilder` makes). A release build has no panel and F1 does nothing.
+
 **Unity layout groups are unpredictable.** They inflated the resource bar to 4x
 its configured height. The HUD positions everything explicitly against corner
 anchors via `UIFactory.Place`. Keep it that way.

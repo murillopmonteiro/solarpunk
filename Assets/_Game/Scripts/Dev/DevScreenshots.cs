@@ -141,17 +141,7 @@ namespace Solarpunk.Dev
             ClickHudButton("Language");
 
             // Late game: the whole tree owned, so every tile and board rule is live.
-            // Passes until nothing new unlocks, since prerequisites gate the order.
-            for (bool progress = true; progress;)
-            {
-                progress = false;
-                foreach (ResearchNode node in researchManager.Tree)
-                {
-                    if (node == null || researchManager.IsUnlocked(node)) continue;
-                    researchManager.AddPoints(node.cost);
-                    progress |= researchManager.TryUnlock(node);
-                }
-            }
+            researchManager.UnlockAll();
 
             // Coastal Engineering: with nothing selected, the panel sells a coast hex.
             selectionController.Select(null);
@@ -193,6 +183,33 @@ namespace Solarpunk.Dev
                 Debug.LogError($"[Autoshot] Rewilding had room at {room.coordinates} but no forest spread in 25 years.");
             selectionController.Select(null);
             yield return Capture(outputDir, "14-after-25-years");
+
+            // Admin mode, opened as F1 would, with its money button pressed for real.
+            // The harness runs in development builds, where the panel exists; say so if it doesn't.
+            Solarpunk.UI.AdminPanel admin = FindFirstObjectByType<Solarpunk.UI.AdminPanel>();
+            if (admin == null)
+            {
+                Debug.LogError("[Autoshot] No admin panel: this is not a development build.");
+                Application.Quit();
+                yield break;
+            }
+            admin.Toggle();
+            var money = FindFirstObjectByType<ResourceManager>();
+            float moneyBefore = money.Current.money;
+            ClickHudButton("Admin0");
+            if (!Mathf.Approximately(money.Current.money, moneyBefore + 1000f))
+                Debug.LogError($"[Autoshot] Admin +1000 left money at {money.Current.money}, expected {moneyBefore + 1000f}.");
+            // Set a stat exactly: cycle Energy -> Money, type a number, press Set.
+            ClickHudButton("StatCycle");
+            UnityEngine.UI.InputField statField = admin.GetComponentInParent<Canvas>()
+                .GetComponentsInChildren<UnityEngine.UI.InputField>(true).FirstOrDefault(f => f.name == "StatValue");
+            if (statField == null) Debug.LogError("[Autoshot] No StatValue field in the admin panel.");
+            else statField.text = "12345";
+            ClickHudButton("StatSet");
+            if (!Mathf.Approximately(money.Current.money, 12345f))
+                Debug.LogError($"[Autoshot] Admin set money left it at {money.Current.money}, expected 12345.");
+            yield return Capture(outputDir, "15-admin-mode");
+            admin.Toggle();
 
             Application.Quit();
         }
