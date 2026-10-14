@@ -36,6 +36,14 @@ namespace Solarpunk.Tiles
                  "board generates itself, like forests.")]
         public bool playerBuildable = true;
 
+        [Tooltip("Most of these the board may hold at once. 0 = no limit. Research can lift it " +
+                 "(Oil Tracking lifts the one-well limit).")]
+        public int maxOnBoard;
+
+        [Tooltip("Years a freshly built one stands before it yields anything (a planted forest). " +
+                 "0 = yields from its first year.")]
+        public int maturesAfter;
+
         [Tooltip("Per-turn effect on the 5 global resources while this tile is active, before " +
                  "any terrain bonus.")]
         public ResourceVector perTurnEffect;

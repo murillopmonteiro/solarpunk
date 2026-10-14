@@ -24,5 +24,15 @@ MonoBehaviour:
   requireAny: 0
   position: {x: -1, y: -4.3}
   branch: science
-  effects: []
-  pendingNote: Needs a Geothermal tile.
+  effects:
+  - kind: 8
+    target: 1
+    key: Geotermica
+    resource: 0
+    add: 0
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: Its earthquake tradeoff needs per-tile risk rolls, not built yet.

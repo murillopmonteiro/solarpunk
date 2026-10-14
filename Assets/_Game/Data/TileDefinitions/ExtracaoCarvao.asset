@@ -18,6 +18,8 @@ MonoBehaviour:
   buildCost: 500
   clearCost: 0
   playerBuildable: 1
+  maxOnBoard: 0
+  maturesAfter: 0
   perTurnEffect:
     energy: 0
     money: 20
@@ -40,4 +42,4 @@ MonoBehaviour:
   tags:
   - fossil-extraction
   placeholderColor: {r: 0.85, g: 0.5, b: 0.22, a: 1}
-  structurePrefab: {fileID: 5339192447636724891, guid: 5fed0f17264b86a429403afbbf8f370c, type: 3}
+  structurePrefab: {fileID: 2836435345037627505, guid: 5fed0f17264b86a429403afbbf8f370c, type: 3}

@@ -49,9 +49,10 @@ namespace Solarpunk.EditorTools
                 Check("hub owned from year 0", research.IsUnlocked("center"));
 
                 // Start palette: City, coal mine, coal plant, hydro. Everything else waits on research.
-                foreach (string open in new[] { "City", "ExtracaoCarvao", "Carvao", "Hidreletrica", "Floresta" })
+                foreach (string open in new[] { "City", "ExtracaoCarvao", "Carvao", "Hidreletrica" })
                     Check($"{open} open at start", !research.IsTileLocked(open));
-                foreach (string locked in new[] { "Biomassa", "Eolica", "Solar", "Nuclear", "Maremotriz", "Petroleo" })
+                foreach (string locked in new[] { "Biomassa", "Eolica", "Solar", "Nuclear", "Maremotriz", "Petroleo", "Floresta",
+                             "Ondas", "Geotermica", "Fusao", "GasNatural", "ExtracaoPetroleo", "ExtracaoGas", "ExtracaoUranio" })
                     Check($"{locked} locked at start", research.IsTileLocked(locked));
 
                 Check("city cap 2 before research", research.CityLevelCap(2) == 2);
@@ -114,6 +115,56 @@ namespace Solarpunk.EditorTools
                 Near("...cities don't get the plant discount",
                     research.BuildCostMultiplier(CityFacts(1)), 0.9f);
 
+
+                // ---- tiles, neighbours, timers, territory
+                foreach (ResearchNode node in nodes)
+                foreach (ResearchEffect effect in node.effects)
+                {
+                    if (effect.kind == EffectKind.UnlockTile)
+                        Check($"{node.name} unlocks a tile that exists ({effect.key})", tiles.ContainsKey(effect.key));
+                }
+
+                Check("Nuclear needs uranium", tiles["Nuclear"].requiredFuel == FuelType.Uranium);
+                Check("Oil plant needs oil", tiles["Petroleo"].requiredFuel == FuelType.Oil);
+                Check("Gas plant needs gas", tiles["GasNatural"].requiredFuel == FuelType.Gas);
+
+                TileFacts byForest = CityFacts(1);
+                byForest.neighbours = new[] { "Floresta", "cat:Forest" };
+                UnlockDeep(research, byId, "gardenCity");
+                // As a difference: Garden City drags in Transit, which moves the same number for every city.
+                Near("Garden City: +1 sustainability for a city next to a forest",
+                    research.ModifyOutput(city, byForest).sustainability - research.ModifyOutput(city, CityFacts(1)).sustainability, 1f);
+                Check("Garden City unlocked Reforestation, so forests are plantable", !research.IsTileLocked("Floresta"));
+
+                TileDefinition wind = tiles["Eolica"];
+                TileFacts windByCity = TileEconomy.Facts(wind);
+                windByCity.neighbours = new[] { "City", "cat:City" };
+                UnlockDeep(research, byId, "wind");
+                Near("Wind next to a city: -0.5 happiness",
+                    research.ModifyOutput(wind.perTurnEffect, windByCity).happiness, -0.5f);
+                UnlockDeep(research, byId, "coops");
+                Near("Community Energy turns it into +0.5",
+                    research.ModifyOutput(wind.perTurnEffect, windByCity).happiness, 0.5f);
+
+                TileFacts biomass = TileEconomy.Facts(tiles["Biomassa"]);
+                Check("Biomass fells a forest every 20 years", research.Period(EffectKind.FellForest, biomass) == 20);
+                UnlockDeep(research, byId, "sustBiomass");
+                Check("...until Sustainable Biomass", research.Period(EffectKind.FellForest, biomass) == 0);
+
+                TileFacts forest = TileEconomy.Facts(tiles["Floresta"]);
+                Check("no spreading before Rewilding", research.Period(EffectKind.SpreadForest, forest) == 0);
+                UnlockDeep(research, byId, "rewilding");
+                Check("Rewilding: forests seed every 25 years", research.Period(EffectKind.SpreadForest, forest) == 25);
+
+                Check("one oil well before Oil Tracking", tiles["ExtracaoPetroleo"].maxOnBoard == 1
+                    && !research.LiftsBuildLimit("ExtracaoPetroleo"));
+                UnlockDeep(research, byId, "oilTrack");
+                Check("Oil Tracking lifts it", research.LiftsBuildLimit("ExtracaoPetroleo"));
+
+                Check("no land for sale before Coastal Engineering", research.TerritoryBasePrice() == 0f);
+                UnlockDeep(research, byId, "coastal");
+                Check("Coastal Engineering puts coast hexes on sale", research.TerritoryBasePrice() > 0f);
+
                 Check("every node has a position-safe prerequisite list", nodes.All(n => n.prerequisites.All(p => p != null)));
                 Check("80+ nodes generated", nodes.Count >= 80);
             }
@@ -140,6 +191,15 @@ namespace Solarpunk.EditorTools
                 research.AddPoints(node.cost);
                 if (!research.TryUnlock(node)) Failures.Add($"could not unlock '{id}': {research.BlockReason(node)}");
             }
+        }
+
+        /// <summary>Unlocks a node and every prerequisite under it, cheapest-first by recursion.</summary>
+        private static void UnlockDeep(ResearchManager research, Dictionary<string, ResearchNode> byId, string id)
+        {
+            if (!byId.TryGetValue(id, out ResearchNode node)) { Failures.Add($"no node '{id}'"); return; }
+            if (research.IsUnlocked(node)) return;
+            foreach (ResearchNode prerequisite in node.prerequisites) UnlockDeep(research, byId, prerequisite.name);
+            Unlock(research, byId, id);
         }
 
         private static void Check(string label, bool ok)

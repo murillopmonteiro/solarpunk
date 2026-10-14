@@ -31,6 +31,7 @@ MonoBehaviour:
     add: 0.5
     multiply: 1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 0
     suppressedBy: []
   - kind: 0
@@ -40,6 +41,7 @@ MonoBehaviour:
     add: -3
     multiply: 1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 1
     suppressedBy: []
   - kind: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     add: -3
     multiply: 1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 1
     suppressedBy: []
   pendingNote: 

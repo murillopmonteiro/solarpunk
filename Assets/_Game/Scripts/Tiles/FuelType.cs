@@ -20,7 +20,8 @@ namespace Solarpunk.Tiles
         None = 0,
         Coal = 1,
         Oil = 2,
-        Uranium = 3
+        Uranium = 3,
+        Gas = 4
     }
 
     public static class FuelTypes
@@ -33,6 +34,7 @@ namespace Solarpunk.Tiles
                 FuelType.Coal => Loc.T("fuel.coal"),
                 FuelType.Oil => Loc.T("fuel.oil"),
                 FuelType.Uranium => Loc.T("fuel.uranium"),
+                FuelType.Gas => Loc.T("fuel.gas"),
                 _ => Loc.T("fuel.none")
             };
         }

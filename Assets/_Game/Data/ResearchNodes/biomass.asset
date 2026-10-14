@@ -31,7 +31,18 @@ MonoBehaviour:
     add: 0
     multiply: 1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 0
     suppressedBy: []
-  pendingNote: Its tradeoff (felling a forest every 20 years) needs hex timers and
-    neighbours.
+  - kind: 13
+    target: 1
+    key: Biomassa
+    resource: 0
+    add: 20
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 1
+    suppressedBy:
+    - sustBiomass
+  pendingNote: 

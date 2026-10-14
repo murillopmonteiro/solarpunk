@@ -17,25 +17,28 @@ namespace Solarpunk.Tiles
     /// </summary>
     public static class TileEconomy
     {
-        public static TileFacts Facts(TileDefinition definition, int cityLevel = 0) => new TileFacts
+        /// <param name="cell">The hex it stands on, for neighbour rules. Null in previews.</param>
+        public static TileFacts Facts(TileDefinition definition, int cityLevel = 0, HexCell cell = null) => new TileFacts
         {
             name = definition.name,
             category = definition.category.ToString(),
             tags = definition.tags,
-            cityLevel = cityLevel
+            cityLevel = cityLevel,
+            neighbours = cell?.NeighbourKeys()
         };
 
         /// <summary>The yearly effect of whatever stands on this hex.</summary>
         public static ResourceVector PerTurn(HexCell cell, CityGrowth cityGrowth, ResearchManager research)
         {
             TileDefinition built = cell.builtTile;
-            if (built == null) return ResourceVector.Zero;
+            if (built == null || !cell.IsMature) return ResourceVector.Zero;
 
             bool isCity = built.category == TileCategory.City;
             ResourceVector output = isCity ? cityGrowth.GetPerTurnEffect() : built.perTurnEffect;
 
+            // ponytail: previews price with no neighbours, so a "next to a forest" bonus shows only once built.
             if (research != null)
-                output = research.ModifyOutput(output, Facts(built, isCity ? cell.cityLevel : 0));
+                output = research.ModifyOutput(output, Facts(built, isCity ? cell.cityLevel : 0, cell));
 
             return isCity ? output : built.ApplyTerrainBonus(output, cell.relief);
         }

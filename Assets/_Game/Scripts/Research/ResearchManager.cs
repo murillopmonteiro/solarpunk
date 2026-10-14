@@ -243,6 +243,38 @@ namespace Solarpunk.Research
             return cap;
         }
 
+        public bool LiftsBuildLimit(string tileName)
+        {
+            foreach (ResearchEffect effect in ActiveEffects())
+            {
+                if (effect.kind == EffectKind.LiftBuildLimit && effect.key == tileName) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Years between firings of a periodic rule (FellForest, SpreadForest) on this
+        /// tile; 0 when no owned research gives it one.
+        /// </summary>
+        public int Period(EffectKind kind, TileFacts tile)
+        {
+            foreach (ResearchEffect effect in ActiveEffects())
+            {
+                if (effect.kind == kind && effect.Matches(tile)) return Mathf.Max(0, Mathf.RoundToInt(effect.add));
+            }
+            return 0;
+        }
+
+        /// <summary>Price of the first bought territory hex; 0 when buying land is not researched.</summary>
+        public float TerritoryBasePrice()
+        {
+            foreach (ResearchEffect effect in ActiveEffects())
+            {
+                if (effect.kind == EffectKind.BuyTerritory) return effect.add;
+            }
+            return 0f;
+        }
+
         /// <summary>
         /// The node that unlocks this tile, or null when the tile is free from the
         /// start. A tile no node mentions is never locked, so adding one to the

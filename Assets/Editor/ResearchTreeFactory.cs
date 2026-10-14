@@ -89,10 +89,17 @@ namespace Solarpunk.EditorTools
 
             // Science
             ["research"] = new[] { PerLevel(0.5f), Trade(Year(M, -10)) },
-            ["biomass"] = new[] { Unlock("Biomassa") },
-            ["wind"] = new[] { Unlock("Eolica") },
-            ["nuclear"] = new[] { Unlock("Nuclear"), Trade(Out("Nuclear", H, -1)) },
-            ["genIV"] = new[] { Out("Nuclear", H, +1) },
+            ["biomass"] = new[] { Unlock("Biomassa"), Trade(Fell("Biomassa", 20, suppressedBy: new[] { "sustBiomass" })) },
+            ["sustBiomass"] = new[] { Out("Biomassa", S, +2, nextTo: "Floresta") },
+            ["wind"] = new[]
+            {
+                // Community Energy turns the -0.5 next to a city into its own +0.5.
+                Unlock("Eolica"), Trade(Out("Eolica", H, -0.5f, nextTo: "city", suppressedBy: new[] { "coops" }))
+            },
+            ["nuclear"] = new[] { Unlock("Nuclear"), Unlock("ExtracaoUranio"), Trade(Out("Nuclear", H, -1)) },
+            ["genIV"] = new[] { Out("Nuclear", H, +1), Out("ExtracaoUranio", S, +1) },
+            ["geothermal"] = new[] { Unlock("Geotermica") },
+            ["fusion"] = new[] { Unlock("Fusao") },
             ["solar"] = new[] { Unlock("Solar") },
             ["computing"] = new[] { ResearchScale(1.25f), Trade(Year(E, -3)) },
             ["cheapSolar"] = new[] { Cost("Solar", 0.6f) },
@@ -106,7 +113,18 @@ namespace Solarpunk.EditorTools
             ["coalPow"] = new[] { Out("Carvao", E, +2), Trade(Out("Carvao", H, -0.5f)) },
             ["coal2"] = new[] { Out("Carvao", E, +2), Trade(Out("Carvao", M, -2)) },
             ["tidal"] = new[] { Unlock("Maremotriz"), Trade(Out("Maremotriz", S, -1)) },
-            ["oilDisc"] = new[] { Unlock("Petroleo") },
+            ["oilDisc"] = new[] { Unlock("Petroleo"), Unlock("ExtracaoPetroleo") },
+            ["oilExt"] = new[] { Out("ExtracaoPetroleo", M, +17) },
+            ["oilTrack"] = new[] { Lift("ExtracaoPetroleo") },
+            ["oilExport"] = new[] { Out("ExtracaoPetroleo", M, +10) },
+            ["refinery"] = new[] { Out("ExtracaoPetroleo", H, +0.5f) },
+            ["safeOil"] = new[] { Out("ExtracaoPetroleo", S, +1) },
+            ["gasDisc"] = new[] { Unlock("GasNatural"), Unlock("ExtracaoGas"), Trade(Out("ExtracaoGas", S, -1)) },
+            ["fracking"] = new[]
+            {
+                Out("ExtracaoGas", M, mul: 1.5f), Trade(Out("ExtracaoGas", S, -1)), Trade(Out("ExtracaoGas", H, -0.5f))
+            },
+            ["wave"] = new[] { Unlock("Ondas") },
             ["oilEnergy"] = new[] { Out("Petroleo", E, +7) },
             ["filtered"] = new[] { Out("Carvao", S, +1), Out("Petroleo", S, +1) },
             ["ccs"] = new[] { Out("tag:fossil", S, mul: 0.5f), Trade(Out("tag:fossil", E, mul: 0.8f)) },
@@ -120,6 +138,12 @@ namespace Solarpunk.EditorTools
             ["circular"] = new[] { Out("city", M, +4), Refund(0.25f) },
             ["conservation"] = new[] { Out("Floresta", S, +1), Trade(Clear("Floresta", 2f)) },
             ["ecotourism"] = new[] { Out("Floresta", M, +2) },
+            ["gardenCity"] = new[] { Out("city", S, +1, nextTo: "Floresta"), Out("city", H, +0.5f, nextTo: "Floresta") },
+            ["coops"] = new[] { Out("Eolica", H, +0.5f, nextTo: "city"), Out("Solar", H, +0.5f, nextTo: "city") },
+            ["reforest"] = new[] { Unlock("Floresta") },
+            ["rewilding"] = new[] { Spread("Floresta", 25) },
+            // PLACEHOLDER price: the tree only says it rises each time (x1.5 per hex, in BuildController).
+            ["coastal"] = new[] { Territory(600f) },
             ["carbonTax"] = new[]
             {
                 Out("city", H, +0.5f),
@@ -136,7 +160,6 @@ namespace Solarpunk.EditorTools
         private static readonly HashSet<string> Gates = new() { "center", "thermo", "electromag", "atomic", "semis" };
 
         private const string NeedsStorage = "Needs an energy storage cap, which the game doesn't have yet.";
-        private const string NeedsNeighbours = "Needs hex neighbours, which the game doesn't track yet.";
         private const string NeedsRisk = "Needs per-tile risk rolls (accidents, quakes, spills), not built yet.";
         private const string NoNumbers = "Its effect has no numbers yet.";
 
@@ -144,21 +167,15 @@ namespace Solarpunk.EditorTools
         private static readonly Dictionary<string, string> Pending = new()
         {
             ["vertical"] = "The population boost has no number yet.",
-            ["gardenCity"] = NeedsNeighbours,
-            ["biomass"] = "Its tradeoff (felling a forest every 20 years) needs hex timers and neighbours.",
-            ["sustBiomass"] = NeedsNeighbours,
-            ["geothermal"] = "Needs a Geothermal tile.",
-            ["nmv5b5btw"] = "Needs a Geothermal tile.",
-            ["wind"] = "Its tradeoff next to cities needs hex neighbours.",
+            ["geothermal"] = "Its earthquake tradeoff needs per-tile risk rolls, not built yet.",
+            ["nmv5b5btw"] = NoNumbers + " Its earthquake tradeoff needs per-tile risk rolls.",
             ["offshore"] = "Needs research to change where a tile may be built.",
-            ["nuclear"] = "Uranium extraction and the accident risk are not built yet.",
-            ["genIV"] = "The uranium extraction part waits on that tile.",
+            ["nuclear"] = "The accident risk needs per-tile risk rolls, not built yet.",
             ["nmv5au1sk"] = NeedsRisk,
             ["nmv5avema"] = NeedsRisk,
             ["nmv5b017x"] = NeedsRisk,
             ["nmv5az390"] = NoNumbers,
             ["repository"] = "Needs nuclear plants to carry a waste cost first.",
-            ["fusion"] = "Needs a Fusion tile.",
             ["nmv5b3u8p"] = NoNumbers,
             ["tandemSolar"] = "Waits on Solar starting weaker, as the tree suggests.",
             ["forecast"] = "Needs wind and solar output to vary year to year, not modelled yet.",
@@ -166,23 +183,11 @@ namespace Solarpunk.EditorTools
             ["storage"] = NeedsStorage,
             ["betterStor"] = NeedsStorage,
             ["pumpedHydro"] = NeedsStorage,
-            ["oilDisc"] = "Oil extraction and the one-well limit are not built, so the Oil plant needs no fuel yet.",
-            ["oilExt"] = "Needs an Oil Extraction tile.",
-            ["oilTrack"] = "Needs an Oil Extraction tile.",
-            ["oilExport"] = "Needs an Oil Extraction tile.",
-            ["refinery"] = "Needs an Oil Extraction tile.",
-            ["safeOil"] = "Needs an Oil Extraction tile and per-tile risk rolls.",
-            ["gasDisc"] = "Needs Gas Extraction and Gas plant tiles.",
-            ["fracking"] = "Needs Gas Extraction and Gas plant tiles.",
+            ["safeOil"] = "The deck has no oil-spill event yet, so that half has nothing to stop.",
             ["greenH2"] = "Needs Gas and Oil plants that can drop their fuel.",
             ["justTrans"] = "Needs demolition to charge or pay by tile type.",
-            ["wave"] = "Needs a Wave tile.",
-            ["coops"] = NeedsNeighbours,
             ["envScience"] = "Needs the HUD forecast and a tradeoff that reacts to sustainability.",
-            ["coastal"] = "Needs territory that can grow during a run.",
-            ["reforest"] = "Needs a plant-a-forest action and hex timers.",
-            ["rewilding"] = "Needs hex neighbours and timers.",
-            ["mineReclaim"] = "Needs a plant-a-forest action.",
+            ["mineReclaim"] = "Needs demolition to offer a cheap replant on the cleared hex.",
             ["nmv5b6gig"] = NoNumbers + " Researching it already clears City Development 2's crowding.",
             ["nmv5c081l"] = "Needs tradeoffs that can be skipped by chance, not built yet.",
         };
@@ -315,7 +320,7 @@ namespace Solarpunk.EditorTools
         }
 
         private static ResearchEffect Out(string target, ResourceType resource, float add = 0f, float mul = 1f,
-            int minLevel = 0, string[] suppressedBy = null)
+            int minLevel = 0, string[] suppressedBy = null, string nextTo = null)
         {
             ResearchEffect effect = Make(EffectKind.TileOutput, target);
             effect.resource = resource;
@@ -323,6 +328,32 @@ namespace Solarpunk.EditorTools
             effect.multiply = mul;
             effect.minCityLevel = minLevel;
             effect.suppressedBy = suppressedBy ?? Array.Empty<string>();
+            // Same syntax as a target, matched against HexCell.NeighbourKeys.
+            effect.nextTo = nextTo == null ? "" : nextTo == "city" ? "cat:City" : nextTo;
+            return effect;
+        }
+
+        private static ResearchEffect Fell(string target, int everyYears, string[] suppressedBy = null)
+        {
+            ResearchEffect effect = Make(EffectKind.FellForest, target);
+            effect.add = everyYears;
+            effect.suppressedBy = suppressedBy ?? Array.Empty<string>();
+            return effect;
+        }
+
+        private static ResearchEffect Spread(string target, int everyYears)
+        {
+            ResearchEffect effect = Make(EffectKind.SpreadForest, target);
+            effect.add = everyYears;
+            return effect;
+        }
+
+        private static ResearchEffect Lift(string tile) => Make(EffectKind.LiftBuildLimit, tile);
+
+        private static ResearchEffect Territory(float basePrice)
+        {
+            ResearchEffect effect = Make(EffectKind.BuyTerritory);
+            effect.add = basePrice;
             return effect;
         }
 
@@ -423,6 +454,7 @@ namespace Solarpunk.EditorTools
             add = source.add,
             multiply = source.multiply,
             minCityLevel = source.minCityLevel,
+            nextTo = source.nextTo,
             isTradeoff = source.isTradeoff,
             suppressedBy = source.suppressedBy?.ToArray() ?? Array.Empty<string>()
         };

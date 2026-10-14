@@ -30,6 +30,7 @@ MonoBehaviour:
     add: 2
     multiply: 1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 0
     suppressedBy: []
   pendingNote: 

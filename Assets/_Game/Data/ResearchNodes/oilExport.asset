@@ -21,5 +21,15 @@ MonoBehaviour:
   requireAny: 0
   position: {x: 5, y: -1}
   branch: energy
-  effects: []
-  pendingNote: Needs an Oil Extraction tile.
+  effects:
+  - kind: 0
+    target: 1
+    key: ExtracaoPetroleo
+    resource: 1
+    add: 10
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: 

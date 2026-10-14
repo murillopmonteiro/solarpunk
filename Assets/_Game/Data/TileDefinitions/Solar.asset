@@ -18,6 +18,8 @@ MonoBehaviour:
   buildCost: 250
   clearCost: 0
   playerBuildable: 1
+  maxOnBoard: 0
+  maturesAfter: 0
   perTurnEffect:
     energy: 15
     money: -2

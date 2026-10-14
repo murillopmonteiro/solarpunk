@@ -22,5 +22,35 @@ MonoBehaviour:
   requireAny: 0
   position: {x: 3, y: 2}
   branch: energy
-  effects: []
-  pendingNote: Needs Gas Extraction and Gas plant tiles.
+  effects:
+  - kind: 0
+    target: 1
+    key: ExtracaoGas
+    resource: 1
+    add: 0
+    multiply: 1.5
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  - kind: 0
+    target: 1
+    key: ExtracaoGas
+    resource: 2
+    add: -1
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 1
+    suppressedBy: []
+  - kind: 0
+    target: 1
+    key: ExtracaoGas
+    resource: 4
+    add: -0.5
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 1
+    suppressedBy: []
+  pendingNote: 

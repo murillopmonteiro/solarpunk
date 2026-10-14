@@ -31,6 +31,7 @@ MonoBehaviour:
     add: 7
     multiply: 1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 0
     suppressedBy: []
   - kind: 0
@@ -40,6 +41,7 @@ MonoBehaviour:
     add: 1
     multiply: 1
     minCityLevel: 6
+    nextTo: 
     isTradeoff: 0
     suppressedBy: []
   - kind: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     add: -0.5
     multiply: 1
     minCityLevel: 6
+    nextTo: 
     isTradeoff: 1
     suppressedBy: []
   pendingNote: The population boost has no number yet.

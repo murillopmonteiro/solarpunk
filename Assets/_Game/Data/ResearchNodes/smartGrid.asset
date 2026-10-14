@@ -30,6 +30,7 @@ MonoBehaviour:
     add: 0
     multiply: 1.1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 0
     suppressedBy: []
   pendingNote: The wind and solar swings it removes are not modelled yet.

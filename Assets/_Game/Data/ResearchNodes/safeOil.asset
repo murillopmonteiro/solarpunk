@@ -22,5 +22,15 @@ MonoBehaviour:
   requireAny: 0
   position: {x: 5, y: 1}
   branch: energy
-  effects: []
-  pendingNote: Needs an Oil Extraction tile and per-tile risk rolls.
+  effects:
+  - kind: 0
+    target: 1
+    key: ExtracaoPetroleo
+    resource: 2
+    add: 1
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: The deck has no oil-spill event yet, so that half has nothing to stop.

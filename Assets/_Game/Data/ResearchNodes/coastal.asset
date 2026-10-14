@@ -22,5 +22,15 @@ MonoBehaviour:
   requireAny: 0
   position: {x: 1.5, y: 3.3}
   branch: industry
-  effects: []
-  pendingNote: Needs territory that can grow during a run.
+  effects:
+  - kind: 15
+    target: 0
+    key: 
+    resource: 0
+    add: 600
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: 

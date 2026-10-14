@@ -18,6 +18,8 @@ MonoBehaviour:
   buildCost: 800
   clearCost: 0
   playerBuildable: 1
+  maxOnBoard: 0
+  maturesAfter: 0
   perTurnEffect:
     energy: 40
     money: -5
@@ -36,4 +38,4 @@ MonoBehaviour:
   tags:
   - renewable
   placeholderColor: {r: 0.35, g: 0.62, b: 0.92, a: 1}
-  structurePrefab: {fileID: 7703012791583991976, guid: b50e3c451538d1a47870364effcf293f, type: 3}
+  structurePrefab: {fileID: 1731089744133145476, guid: b50e3c451538d1a47870364effcf293f, type: 3}

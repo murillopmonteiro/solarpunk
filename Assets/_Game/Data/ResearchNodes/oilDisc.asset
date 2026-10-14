@@ -29,7 +29,17 @@ MonoBehaviour:
     add: 0
     multiply: 1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 0
     suppressedBy: []
-  pendingNote: Oil extraction and the one-well limit are not built, so the Oil plant
-    needs no fuel yet.
+  - kind: 8
+    target: 1
+    key: ExtracaoPetroleo
+    resource: 0
+    add: 0
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: 

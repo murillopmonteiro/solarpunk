@@ -69,6 +69,42 @@ namespace Solarpunk.Tiles
             return false;
         }
 
+        private int CountOnBoard(TileDefinition definition)
+        {
+            int count = 0;
+            foreach (var pair in gridManager.Cells)
+            {
+                if (pair.Value.builtTile == definition) count++;
+            }
+            return count;
+        }
+
+        // ---------------------------------------------------------------- territory
+
+        /// <summary>Each hex bought costs this much more than the base, compounding.</summary>
+        private const float TerritoryPriceGrowth = 1.5f;
+
+        private readonly System.Random _territoryRng = new();
+        private int _territoriesBought;
+
+        /// <summary>What the next coast hex costs; 0 while Coastal Engineering is not researched.</summary>
+        public float TerritoryPrice =>
+            researchManager == null ? 0f
+                : researchManager.TerritoryBasePrice() * Mathf.Pow(TerritoryPriceGrowth, _territoriesBought);
+
+        /// <summary>Buys one coast hex on the shore. Like building, it can run the treasury into debt.</summary>
+        public bool TryBuyTerritory()
+        {
+            float price = TerritoryPrice;
+            if (price <= 0f) return false;
+            if (gridManager.AddTerritory(_territoryRng, TerrainRelief.Coast) == null) return false;
+
+            resourceManager.Spend(price);
+            _territoriesBought++;
+            OnBoardChanged?.Invoke();
+            return true;
+        }
+
         /// <summary>Why a given tile can't go on a given hex — null when it can.</summary>
         public string BlockReason(HexCell cell, TileDefinition definition)
         {
@@ -89,6 +125,11 @@ namespace Solarpunk.Tiles
             if (!HasFuelSupply(definition.requiredFuel))
                 return Loc.T("block.needsExtraction", FuelTypes.Describe(definition.requiredFuel));
 
+            // The one-well limit on oil, until Oil Tracking lifts it.
+            if (definition.maxOnBoard > 0 && CountOnBoard(definition) >= definition.maxOnBoard &&
+                (researchManager == null || !researchManager.LiftsBuildLimit(definition.name)))
+                return Loc.T("block.limit", definition.maxOnBoard);
+
             // No money check: building past zero puts the treasury into debt.
             return null;
         }
@@ -104,8 +145,7 @@ namespace Solarpunk.Tiles
 
             resourceManager.Spend(CostOn(definition, cell.relief));
 
-            cell.builtTile = definition;
-            cell.SetStructure(StructureFactory.Create(definition));
+            cell.Place(definition);
 
             // Founding bonus, e.g. the city's one-off happiness lift, plus whatever
             // research charges per building (Mass Production's embodied carbon).
@@ -147,6 +187,7 @@ namespace Solarpunk.Tiles
             }
 
             cell.builtTile = null;
+            cell.age = 0;
             cell.cityLevel = 1;
             cell.ClearStructure();
 

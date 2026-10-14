@@ -9,8 +9,8 @@ using UnityEngine;
 namespace Solarpunk.EditorTools
 {
     /// <summary>
-    /// Generates the 10 starting TileDefinition assets (city, 8 power plants,
-    /// extraction) with placeholder-but-plausible numbers derived from the
+    /// Generates the TileDefinition assets (city, power plants, extractions,
+    /// forest) with placeholder-but-plausible numbers derived from the
     /// qualitative profiles in docs/GameDesign.md §3. None of these numbers are
     /// balanced or playtested — tune them freely in the Inspector; this factory
     /// only exists so the assets don't have to be hand-typed.
@@ -22,11 +22,12 @@ namespace Solarpunk.EditorTools
         /// <summary>Canonical build-menu order: city first, then plants, then extractions.</summary>
         public static readonly string[] OrderedNames =
         {
-            "City", "Hidreletrica", "Maremotriz", "Eolica", "Solar",
-            "Nuclear", "Biomassa", "Carvao", "Petroleo", "ExtracaoCarvao", "Floresta"
+            "City", "Hidreletrica", "Maremotriz", "Ondas", "Eolica", "Solar", "Geotermica",
+            "Nuclear", "Fusao", "Biomassa", "Carvao", "Petroleo", "GasNatural",
+            "ExtracaoCarvao", "ExtracaoPetroleo", "ExtracaoGas", "ExtracaoUranio", "Floresta"
         };
 
-        /// <summary>The definitions the build menu offers. Forests are board-generated, not built.</summary>
+        /// <summary>The definitions the build menu offers. Forests are in it, locked until Reforestation.</summary>
         public static List<TileDefinition> LoadPalette() =>
             LoadAll().FindAll(d => d.playerBuildable);
 
@@ -98,11 +99,10 @@ namespace Solarpunk.EditorTools
                     new Color(0.97f, 0.82f, 0.30f),
                     tags: Renewable),
 
-                // TODO: requiredFuel = FuelType.Uranium once a uranium extraction tile exists.
-                // Gating it now would make nuclear permanently unbuildable.
                 Create("Nuclear", TileCategory.PowerPlant, Anywhere, 3000f,
                     new ResourceVector { energy = 80f, sustainability = 0f, money = -15f },
-                    new Color(0.72f, 0.55f, 0.90f)),
+                    new Color(0.72f, 0.55f, 0.90f),
+                    requiredFuel: FuelType.Uranium),
 
                 Create("Biomassa", TileCategory.PowerPlant, Anywhere, 350f,
                     new ResourceVector { energy = 12f, sustainability = -1f, money = -2f },
@@ -115,10 +115,35 @@ namespace Solarpunk.EditorTools
                     requiredFuel: FuelType.Coal,
                     tags: Fossil),
 
-                // TODO: requiredFuel = FuelType.Oil once an oil extraction tile exists.
                 Create("Petroleo", TileCategory.PowerPlant, Anywhere, 900f,
                     new ResourceVector { energy = 35f, sustainability = -6f, money = -10f },
                     new Color(0.36f, 0.26f, 0.20f),
+                    requiredFuel: FuelType.Oil,
+                    tags: Fossil),
+
+                // Numbers for the tiles below come from the research tree's unlock text where it
+                // gives them (Wave, Geothermal, Gas plant, Fusion). The extractions' figures are
+                // the tree's "before" values (oil +8 money / -2 sust, uranium -1 sust) with the
+                // gaps guessed. All PLACEHOLDER, to tune.
+                Create("Ondas", TileCategory.PowerPlant, Only(TerrainRelief.Coast), 600f,
+                    new ResourceVector { energy = 10f, sustainability = 2f, money = -5f },
+                    new Color(0.45f, 0.72f, 0.95f),
+                    tags: Renewable),
+
+                // Earthquake risk from the tree is not modelled: there are no per-tile risk rolls.
+                Create("Geotermica", TileCategory.PowerPlant, Only(TerrainRelief.Mountain), 900f,
+                    new ResourceVector { energy = 20f, sustainability = 1f, money = -4f },
+                    new Color(0.86f, 0.38f, 0.26f),
+                    tags: Renewable),
+
+                Create("Fusao", TileCategory.PowerPlant, Anywhere, 5000f,
+                    new ResourceVector { energy = 120f, money = -25f },
+                    new Color(0.95f, 0.55f, 0.85f)),
+
+                Create("GasNatural", TileCategory.PowerPlant, Anywhere, 700f,
+                    new ResourceVector { energy = 30f, sustainability = -2f, money = -6f },
+                    new Color(0.55f, 0.70f, 0.82f),
+                    requiredFuel: FuelType.Gas,
                     tags: Fossil),
 
                 // The reference triad's "Coal Extraction": +20 money, -1 sustainability.
@@ -144,13 +169,35 @@ namespace Solarpunk.EditorTools
                         },
                     }),
 
-                // Not in the build menu: the board seeds these on open ground itself.
-                // Free standing sustainability, and the price of a hex is felling one.
-                Create("Floresta", TileCategory.Forest, Only(TerrainRelief.Mutable), 0f,
+                // One well until Oil Tracking. Drilled on land or just offshore.
+                Create("ExtracaoPetroleo", TileCategory.Extraction,
+                    Only(TerrainRelief.Mutable, TerrainRelief.Coast), 600f,
+                    new ResourceVector { money = 8f, sustainability = -2f },
+                    new Color(0.22f, 0.18f, 0.16f),
+                    producedFuel: FuelType.Oil, displayName: "Extracao de Petroleo",
+                    tags: FossilExtraction, maxOnBoard: 1),
+
+                // Methane leaks are Natural Gas Discovery's tradeoff, so the base S is the -1 before it.
+                Create("ExtracaoGas", TileCategory.Extraction,
+                    Only(TerrainRelief.Mutable, TerrainRelief.Coast), 500f,
+                    new ResourceVector { money = 10f, sustainability = -1f },
+                    new Color(0.70f, 0.80f, 0.88f),
+                    producedFuel: FuelType.Gas, displayName: "Extracao de Gas",
+                    tags: FossilExtraction),
+
+                Create("ExtracaoUranio", TileCategory.Extraction,
+                    Only(TerrainRelief.Mutable, TerrainRelief.Mountain), 800f,
+                    new ResourceVector { money = 4f, sustainability = -1f },
+                    new Color(0.62f, 0.85f, 0.30f),
+                    producedFuel: FuelType.Uranium, displayName: "Extracao de Uranio"),
+
+                // The board seeds these on open ground itself, already grown. Reforestation
+                // puts them in the build menu: $150 to plant, nothing for 10 years while it grows.
+                Create("Floresta", TileCategory.Forest, Only(TerrainRelief.Mutable), 150f,
                     new ResourceVector { sustainability = 3f },
                     new Color(0.15f, 0.37f, 0.20f),
                     AssetDatabase.LoadAssetAtPath<GameObject>(TreeModelBuilder.PrefabPath),
-                    clearCost: 200f, playerBuildable: false),
+                    clearCost: 200f, maturesAfter: 10),
             };
 
             PruneStrayDefinitions();
@@ -194,7 +241,8 @@ namespace Solarpunk.EditorTools
             GameObject structurePrefab = null, ResourceVector onBuildBonus = default,
             FuelType requiredFuel = FuelType.None, FuelType producedFuel = FuelType.None,
             string displayName = null, float clearCost = 0f, bool playerBuildable = true,
-            TerrainBonus[] terrainBonuses = null, string[] tags = null)
+            TerrainBonus[] terrainBonuses = null, string[] tags = null,
+            int maxOnBoard = 0, int maturesAfter = 0)
         {
             var asset = ScriptableObject.CreateInstance<TileDefinition>();
             asset.displayName = displayName ?? name;
@@ -206,6 +254,8 @@ namespace Solarpunk.EditorTools
             asset.buildCost = cost;
             asset.clearCost = clearCost;
             asset.playerBuildable = playerBuildable;
+            asset.maxOnBoard = maxOnBoard;
+            asset.maturesAfter = maturesAfter;
             asset.perTurnEffect = effect;
             asset.requiredFuel = requiredFuel;
             asset.producedFuel = producedFuel;

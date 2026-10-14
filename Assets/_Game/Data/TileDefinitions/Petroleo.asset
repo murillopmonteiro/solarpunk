@@ -18,6 +18,8 @@ MonoBehaviour:
   buildCost: 900
   clearCost: 0
   playerBuildable: 1
+  maxOnBoard: 0
+  maturesAfter: 0
   perTurnEffect:
     energy: 35
     money: -10
@@ -32,7 +34,7 @@ MonoBehaviour:
     happiness: 0
   terrainBonuses: []
   producedFuel: 0
-  requiredFuel: 0
+  requiredFuel: 2
   tags:
   - fossil
   placeholderColor: {r: 0.36, g: 0.26, b: 0.2, a: 1}

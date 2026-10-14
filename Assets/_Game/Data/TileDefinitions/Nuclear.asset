@@ -18,6 +18,8 @@ MonoBehaviour:
   buildCost: 3000
   clearCost: 0
   playerBuildable: 1
+  maxOnBoard: 0
+  maturesAfter: 0
   perTurnEffect:
     energy: 80
     money: -15
@@ -32,7 +34,7 @@ MonoBehaviour:
     happiness: 0
   terrainBonuses: []
   producedFuel: 0
-  requiredFuel: 0
+  requiredFuel: 3
   tags: []
   placeholderColor: {r: 0.72, g: 0.55, b: 0.9, a: 1}
   structurePrefab: {fileID: 0}

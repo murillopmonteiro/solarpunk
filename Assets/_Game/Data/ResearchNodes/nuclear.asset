@@ -32,6 +32,17 @@ MonoBehaviour:
     add: 0
     multiply: 1
     minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  - kind: 8
+    target: 1
+    key: ExtracaoUranio
+    resource: 0
+    add: 0
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
     isTradeoff: 0
     suppressedBy: []
   - kind: 0
@@ -41,6 +52,7 @@ MonoBehaviour:
     add: -1
     multiply: 1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 1
     suppressedBy: []
-  pendingNote: Uranium extraction and the accident risk are not built yet.
+  pendingNote: The accident risk needs per-tile risk rolls, not built yet.

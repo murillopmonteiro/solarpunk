@@ -16,7 +16,7 @@ the design and this file is the implementation status.
 
 **Nothing in this project is hand-authored. Everything is generated from code.**
 
-The scene, the hex prefab, the hexagon mesh, all 11 tile assets, every material,
+The scene, the hex prefab, the hexagon mesh, all 18 tile assets, every material,
 the city prefab, the tree mesh, and the entire HUD are produced by scripts in
 `Assets/Editor/`.
 
@@ -108,14 +108,14 @@ Assets/_Game/
     Research/  ResearchNode, ResearchManager       (points + tree, outside ResourceVector)
     UI/        code-built HUD                      (leaf: nothing depends on it)
     Dev/       DevScreenshots capture harness
-  Data/TileDefinitions/   the 11 tile assets
+  Data/TileDefinitions/   the 18 tile assets
   Data/ResearchNodes/     the research tree assets
   Resources/Fonts/        Fredoka + Nunito (OFL), loaded by UIFactory
   Shaders/                VertexColorUnlit, for the sea
   Meshes/ Prefabs/ Materials/ Scenes/Game.unity
 Assets/Editor/
   SceneBootstrapper   assembles the whole scene
-  TileDataFactory     generates the 11 tile assets
+  TileDataFactory     generates the 18 tile assets
   ResearchTreeFactory generates the research nodes from docs/ResearchTree.json
   ResearchSmokeCheck  unlocks nodes headless and checks their effects
   EventDeckFactory    generates Murillo's 18 event cards (numbers + draw rules; text in Loc)
@@ -200,10 +200,27 @@ in game rebuilds the whole HUD canvas (`GameHUD.Rebuild`), so labels need no
 refresh logic of their own. PT strings run longer — check new ones in the PT
 autoshot pass.
 
-Two flags keep the forest honest as data rather than a special case:
-`playerBuildable` keeps it out of the build menu (`HexGridManager` seeds it
-instead), and `clearCost` makes demolition charge instead of refund. Any future
-terrain feature reuses both.
+Forests are data rather than a special case: `clearCost` makes demolition charge
+instead of refund, and `maturesAfter` (10 for forest) makes a planted one yield
+nothing until it has grown in. The board seeds forests already grown; Reforestation
+unlocks planting them from the build menu. `playerBuildable` still exists for a
+future terrain feature that should never be built.
+
+**Board rules that are not one tile's output.** `HexCell.Neighbours` is kept by
+`HexGridManager` as hexes spawn (territory included). A research `TileOutput`
+effect with `nextTo` applies only when a grown neighbour matches, in the same
+target syntax (`Floresta`, `cat:City`, `tag:fossil`) — Garden City, Sustainable
+Biomass, Wind's noise and Community Energy use it. Previews have no hex, so a
+neighbour bonus shows only once built. `HexCell.age` is the hex timer: the turn
+loop ages every tile a year, then fires `FellForest` (Biomass, every 20) and
+`SpreadForest` (Rewilding, every 25). `maxOnBoard` caps a tile (one oil well)
+until a `LiftBuildLimit` effect (Oil Tracking). `BuyTerritory` (Coastal
+Engineering) puts a coast hex on sale in the build panel when nothing is
+selected, $600 then ×1.5 each.
+
+The build panel lists only what the selected hex's terrain allows and research
+has unlocked, and scales itself down past ~10 rows to stay clear of the
+bottom-right buttons.
 
 ---
 
@@ -333,7 +350,7 @@ level 1 city, coal extraction pithead, coal thermal and hydroelectric models,
 full HUD, unlimited cities,
 coal plants gated on coal extraction, forests seeded on open ground and felled
 for a fee, per-relief build rules with terrain bonuses, the 80-node research tree from
-the artifact with 39 nodes wired to real effects (pannable, zoomable overlay;
+the artifact with 56 nodes wired to real effects (pannable, zoomable overlay;
 plants locked behind research; city level capped by research), English and PT-BR text
 with an in-game toggle, 18 yearly event cards on a full-screen card that blocks the
 year until answered (choices, war window, territory purchase/conquest growing the
@@ -377,11 +394,11 @@ assembly boundaries and no test suite on `master`.
 
 ### Not built
 
-- **36 research nodes, plus parts of 7 more** — in the tree, marked "not active
-  yet" with the reason (the 5 science gates do nothing by design). They wait on systems that do not exist: an energy storage cap, hex
-  neighbours, hex timers, per-tile risk rolls, new tiles (oil/gas/uranium
-  extraction, gas plant, geothermal, wave, fusion), wind/solar intermittency,
-  territory growth. Node effect and tradeoff text is English only; names are
+- **19 research nodes, plus parts of 5 more** — in the tree, marked "not active
+  yet" with the reason (the 5 science gates do nothing by design). They wait on
+  systems that do not exist: an energy storage cap, per-tile risk rolls (nuclear
+  accidents, geothermal quakes, spills), wind/solar intermittency, research that
+  changes where a tile may be built (Offshore Wind), fuel-free hydrogen plants. Node effect and tradeoff text is English only; names are
   translated.
 - **Eras** — the event deck has Murillo's Era 1 cards, but no era system, so they
   stay in the deck all run alongside the general ones.
@@ -389,11 +406,9 @@ assembly boundaries and no test suite on `master`.
   (`BuildController.BlockReason`), but the doc wants fossil/nuclear plants to run
   *with a penalty* when their supply is demolished later. The turn loop does not
   look at fuel at all yet.
-- **Oil and uranium extraction tiles** — `FuelType` has the values and the
-  matching-producer check is generic, but only `ExtracaoCarvao` exists, so
-  Petróleo and Nuclear are left with `requiredFuel = None` (gating them now would
-  make them unbuildable). Two asset entries in `TileDataFactory` plus flipping
-  those two TODOs is the whole job.
+- **Models for the seven newer tiles** — Oil/Gas/Uranium extraction, Gas plant,
+  Wave, Geothermal and Fusion render as primitive placeholders. Their numbers come
+  from the research tree text where it gives them, the rest are guesses to tune.
 - **Mountain wind bonus** is in: +20% energy and +20% cost, the number the
   research tree gives.
 - **City models for levels 2-10** — only level 1 exists. Suggested approach is

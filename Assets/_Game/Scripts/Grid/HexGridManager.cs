@@ -91,6 +91,16 @@ namespace Solarpunk.Grid
             cell.name = $"Hex {coords} {relief}";
             cell.Initialize(coords, relief);
             if (forested) SeedForest(cell);
+
+            // Neighbours are linked both ways as each hex lands, so territory added
+            // mid-run joins the same graph with no rebuild.
+            foreach (HexCoordinates d in Directions)
+            {
+                if (!_cells.TryGetValue(new HexCoordinates(coords.q + d.q, coords.r + d.r), out HexCell n)) continue;
+                cell.Neighbours.Add(n);
+                n.Neighbours.Add(cell);
+            }
+
             _cells[coords] = cell;
             return cell;
         }
@@ -105,8 +115,9 @@ namespace Solarpunk.Grid
         /// territory purchase). Its relief is drawn at random, open ground twice as
         /// likely as rock or coast; open ground arrives wooded like the rest.
         /// Waterfall is left out: it only takes hydro, and a second one is a map decision.
+        /// A bought hex (Coastal Engineering) passes its relief instead: always coast.
         /// </summary>
-        public HexCell AddTerritory(System.Random rng)
+        public HexCell AddTerritory(System.Random rng, TerrainRelief? forcedRelief = null)
         {
             var free = new List<HexCoordinates>();
             foreach (HexCoordinates c in _cells.Keys)
@@ -120,8 +131,42 @@ namespace Solarpunk.Grid
             if (free.Count == 0) return null;
 
             TerrainRelief[] reliefs = { TerrainRelief.Mutable, TerrainRelief.Mutable, TerrainRelief.Mountain, TerrainRelief.Coast };
-            TerrainRelief relief = reliefs[rng.Next(reliefs.Length)];
+            TerrainRelief relief = forcedRelief ?? reliefs[rng.Next(reliefs.Length)];
             return Spawn(free[rng.Next(free.Count)], relief, relief == TerrainRelief.Mutable);
+        }
+
+        /// <summary>
+        /// Fells the forest nearest to this hex (Biomass eating its fuelwood). False
+        /// when the island has none left. Ties go to whichever the board lists first.
+        /// </summary>
+        public bool FellNearestForest(HexCell from)
+        {
+            HexCell nearest = null;
+            foreach (HexCell c in _cells.Values)
+            {
+                if (c.builtTile == null || c.builtTile.category != TileCategory.Forest) continue;
+                if (nearest == null || from.coordinates.DistanceTo(c.coordinates) < from.coordinates.DistanceTo(nearest.coordinates))
+                    nearest = c;
+            }
+            if (nearest == null) return false;
+
+            nearest.builtTile = null;
+            nearest.age = 0;
+            nearest.ClearStructure();
+            return true;
+        }
+
+        /// <summary>
+        /// Plants a young forest on one empty open-ground neighbour of this hex
+        /// (Rewilding). It grows in like a planted one. False when nothing is free.
+        /// </summary>
+        public bool SpreadForest(HexCell from, System.Random rng)
+        {
+            var open = from.Neighbours.FindAll(n => n.IsEmpty && n.relief == TerrainRelief.Mutable);
+            if (open.Count == 0 || forestDefinition == null) return false;
+
+            open[rng.Next(open.Count)].Place(forestDefinition);
+            return true;
         }
 
         /// <summary>
@@ -133,8 +178,8 @@ namespace Solarpunk.Grid
         {
             if (forestDefinition == null) return;
 
-            cell.builtTile = forestDefinition;
-            cell.SetStructure(StructureFactory.Create(forestDefinition));
+            // Old growth: it counts as grown from year 0, unlike a planted one.
+            cell.Place(forestDefinition, forestDefinition.maturesAfter);
         }
 
         public bool TryGetCell(HexCoordinates coords, out HexCell cell) => _cells.TryGetValue(coords, out cell);

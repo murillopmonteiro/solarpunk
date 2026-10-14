@@ -24,4 +24,4 @@ MonoBehaviour:
   position: {x: -0.5, y: 6.3}
   branch: industry
   effects: []
-  pendingNote: Needs a plant-a-forest action.
+  pendingNote: Needs demolition to offer a cheap replant on the cleared hex.

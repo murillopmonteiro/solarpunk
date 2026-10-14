@@ -30,6 +30,18 @@ MonoBehaviour:
     add: 0
     multiply: 1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 0
     suppressedBy: []
-  pendingNote: Its tradeoff next to cities needs hex neighbours.
+  - kind: 0
+    target: 1
+    key: Eolica
+    resource: 4
+    add: -0.5
+    multiply: 1
+    minCityLevel: 0
+    nextTo: cat:City
+    isTradeoff: 1
+    suppressedBy:
+    - coops
+  pendingNote: 

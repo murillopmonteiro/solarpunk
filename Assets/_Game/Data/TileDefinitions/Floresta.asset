@@ -15,9 +15,11 @@ MonoBehaviour:
   displayName: Floresta
   category: 3
   allowedRelief: 00000000
-  buildCost: 0
+  buildCost: 150
   clearCost: 200
-  playerBuildable: 0
+  playerBuildable: 1
+  maxOnBoard: 0
+  maturesAfter: 10
   perTurnEffect:
     energy: 0
     money: 0
@@ -35,4 +37,4 @@ MonoBehaviour:
   requiredFuel: 0
   tags: []
   placeholderColor: {r: 0.15, g: 0.37, b: 0.2, a: 1}
-  structurePrefab: {fileID: 8131673454152900766, guid: ff11800991a90cf49b55f3e7d9fe5a9b, type: 3}
+  structurePrefab: {fileID: 4110013277744613740, guid: ff11800991a90cf49b55f3e7d9fe5a9b, type: 3}

@@ -30,6 +30,17 @@ MonoBehaviour:
     add: 1
     multiply: 1
     minCityLevel: 0
+    nextTo: 
     isTradeoff: 0
     suppressedBy: []
-  pendingNote: The uranium extraction part waits on that tile.
+  - kind: 0
+    target: 1
+    key: ExtracaoUranio
+    resource: 2
+    add: 1
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: 

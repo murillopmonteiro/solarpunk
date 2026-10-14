@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
+using Solarpunk.Core;
 using Solarpunk.Events;
 using Solarpunk.Grid;
 using Solarpunk.Managers;
@@ -138,6 +139,60 @@ namespace Solarpunk.Dev
             yield return Capture(outputDir, "11-research-switched");
             ClickHudButton("Close");
             ClickHudButton("Language");
+
+            // Late game: the whole tree owned, so every tile and board rule is live.
+            // Passes until nothing new unlocks, since prerequisites gate the order.
+            for (bool progress = true; progress;)
+            {
+                progress = false;
+                foreach (ResearchNode node in researchManager.Tree)
+                {
+                    if (node == null || researchManager.IsUnlocked(node)) continue;
+                    researchManager.AddPoints(node.cost);
+                    progress |= researchManager.TryUnlock(node);
+                }
+            }
+
+            // Coastal Engineering: with nothing selected, the panel sells a coast hex.
+            selectionController.Select(null);
+            yield return Capture(outputDir, "12-territory-offer");
+            int beforeBuy = gridManager.Cells.Count;
+            ClickHudButton(Loc.T("build.buyTerritory"));
+            if (gridManager.Cells.Count != beforeBuy + 1)
+                Debug.LogError($"[Autoshot] Buying a coast hex left {gridManager.Cells.Count} hexes, expected {beforeBuy + 1}.");
+
+            // Every tile open ground can take, at once: the longest the build list gets.
+            HexCell open = NextOpenHex() ?? NextForestHex();
+            if (open != null && !open.IsEmpty) buildController.Demolish(open);
+            selectionController.Select(open);
+            yield return Capture(outputDir, "13-late-palette");
+
+            // Biomass fells its nearest forest at 20 years; Sustainable Biomass (owned) stops it,
+            // so the forest count should only go up, by Rewilding at 25.
+            buildController.TryBuild(open, Tile(p => p.name == "Biomassa"));
+
+            // Rewilding needs room: free one open-ground hex beside a forest, through the neighbour graph.
+            HexCell room = gridManager.Cells.Values
+                .Where(c => c.builtTile != null && c.builtTile.category == TileCategory.Forest)
+                .SelectMany(c => c.Neighbours)
+                .FirstOrDefault(n => n.relief == TerrainRelief.Mutable && n.builtTile != null
+                                     && n.builtTile.category != TileCategory.Forest);
+            if (room != null) buildController.Demolish(room);
+
+            int forests = gridManager.Cells.Values.Count(c => c.builtTile != null && c.builtTile.category == TileCategory.Forest);
+            for (int i = 0; i < 25; i++)
+            {
+                if (randomEvents.Pending != null) randomEvents.Resolve(0);
+                turnManager.AdvanceTurn();
+            }
+            if (randomEvents.Pending != null) randomEvents.Resolve(0);
+            int forestsAfter = gridManager.Cells.Values.Count(c => c.builtTile != null && c.builtTile.category == TileCategory.Forest);
+            Debug.Log($"[Autoshot] Forests {forests} -> {forestsAfter} over 25 years; " +
+                      $"hex {open.coordinates} has {open.Neighbours.Count} neighbours.");
+            if (room != null && forestsAfter <= forests)
+                Debug.LogError($"[Autoshot] Rewilding had room at {room.coordinates} but no forest spread in 25 years.");
+            selectionController.Select(null);
+            yield return Capture(outputDir, "14-after-25-years");
 
             Application.Quit();
         }

@@ -22,5 +22,25 @@ MonoBehaviour:
   requireAny: 0
   position: {x: 1, y: 2}
   branch: energy
-  effects: []
-  pendingNote: Needs hex neighbours, which the game doesn't track yet.
+  effects:
+  - kind: 0
+    target: 1
+    key: Eolica
+    resource: 4
+    add: 0.5
+    multiply: 1
+    minCityLevel: 0
+    nextTo: cat:City
+    isTradeoff: 0
+    suppressedBy: []
+  - kind: 0
+    target: 1
+    key: Solar
+    resource: 4
+    add: 0.5
+    multiply: 1
+    minCityLevel: 0
+    nextTo: cat:City
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: 

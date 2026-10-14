@@ -92,8 +92,8 @@ namespace Solarpunk.Core
             ["hud.terrain"] = ("TERRAIN", "TERRENO"),
             ["hud.keyOpen"] = ("Open, build anything", "Livre, aceita qualquer coisa"),
             ["hud.keyWaterfall"] = ("Waterfall, hydro only", "Cachoeira, só hidrelétrica"),
-            ["hud.keyCoast"] = ("Coast, tidal only", "Litoral, só maremotriz"),
-            ["hud.keyMountain"] = ("Mountain, favours wind", "Montanha, favorece eólica"),
+            ["hud.keyCoast"] = ("Coast, sea power and wells", "Litoral, energia do mar e poços"),
+            ["hud.keyMountain"] = ("Mountain, mines and wind", "Montanha, minas e eólica"),
             ["hud.hint"] = ("Click a hexagon to build.\nSpace also advances a year.",
                 "Clique num hexágono para construir.\nEspaço também avança um ano."),
             ["hud.playAgain"] = ("PLAY AGAIN", "JOGAR DE NOVO"),
@@ -125,8 +125,8 @@ namespace Solarpunk.Core
             ["build.clickToInspect"] = ("Click a hexagon to inspect it", "Clique num hexágono para inspecioná-lo"),
             ["build.hex"] = ("HEX {0}", "HEX {0}"),
             ["build.descWaterfall"] = ("Waterfall. Hydro plants only.", "Cachoeira. Só hidrelétricas."),
-            ["build.descMountain"] = ("Mountain. Favours wind.", "Montanha. Favorece eólicas."),
-            ["build.descCoast"] = ("Coast. Tidal plants only.", "Litoral. Só maremotrizes."),
+            ["build.descMountain"] = ("Mountain. Mines, wind, geothermal.", "Montanha. Minas, eólica, geotérmica."),
+            ["build.descCoast"] = ("Coast. Sea power and offshore wells.", "Litoral. Energia do mar e poços."),
             ["build.descOpen"] = ("Open ground. Build anything.", "Terreno livre. Aceita qualquer construção."),
             ["build.buildHere"] = ("BUILD HERE", "CONSTRUIR AQUI"),
             ["build.cityDetail"] = ("Grows each year, houses your people", "Cresce a cada ano, abriga sua população"),
@@ -145,6 +145,10 @@ namespace Solarpunk.Core
                 "Libera o hexágono, devolve parte do custo"),
             ["build.capped"] = ("Capped at level {0}", "Limite: nível {0}"),
             ["build.cappedDetail"] = ("Research raises the city level cap", "Pesquisas aumentam o nível máximo"),
+            ["build.maturesIn"] = ("Still growing in, yields in {0} years", "Ainda crescendo, produz em {0} anos"),
+            ["build.buyTerritory"] = ("Buy a coast hex", "Comprar litoral"),
+            ["build.buyTerritoryDetail"] = ("A new hex on the shore, dearer each time",
+                "Um hexágono novo na costa, mais caro a cada vez"),
 
             // Block reasons
             ["block.noTile"] = ("No tile selected", "Nada selecionado"),
@@ -156,6 +160,7 @@ namespace Solarpunk.Core
             ["block.researched"] = ("Already researched", "Já pesquisado"),
             ["block.research"] = ("Not enough research", "Pesquisa insuficiente"),
             ["block.needsResearch"] = ("Research {0} first", "Pesquise {0} antes"),
+            ["block.limit"] = ("Limit of {0} on the island", "Limite de {0} na ilha"),
             ["block.or"] = (" or ", " ou "),
 
             // Terrain and fuel, lower-case for use inside sentences
@@ -168,6 +173,7 @@ namespace Solarpunk.Core
             ["fuel.coal"] = ("coal", "carvão"),
             ["fuel.oil"] = ("oil", "petróleo"),
             ["fuel.uranium"] = ("uranium", "urânio"),
+            ["fuel.gas"] = ("gas", "gás"),
             ["fuel.none"] = ("no", "nenhum"),
 
             // Research panel
@@ -271,6 +277,13 @@ namespace Solarpunk.Core
             ["tile.Carvao"] = ("Coal Plant", "Carvão"),
             ["tile.Petroleo"] = ("Oil Plant", "Petróleo"),
             ["tile.ExtracaoCarvao"] = ("Coal Mine", "Extração de Carvão"),
+            ["tile.ExtracaoPetroleo"] = ("Oil Well", "Extração de Petróleo"),
+            ["tile.ExtracaoGas"] = ("Gas Well", "Extração de Gás"),
+            ["tile.ExtracaoUranio"] = ("Uranium Mine", "Extração de Urânio"),
+            ["tile.GasNatural"] = ("Gas Plant", "Gás Natural"),
+            ["tile.Ondas"] = ("Wave", "Ondas"),
+            ["tile.Geotermica"] = ("Geothermal", "Geotérmica"),
+            ["tile.Fusao"] = ("Fusion", "Fusão"),
             ["tile.Floresta"] = ("Forest", "Floresta"),
 
         };

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Solarpunk.Tiles;
 using UnityEngine;
 
@@ -17,6 +18,12 @@ namespace Solarpunk.Grid
         public TileDefinition builtTile;
         public int cityLevel = 1; // only meaningful when builtTile.category == City
 
+        /// <summary>Years the current tile has stood. The hex timer every periodic rule counts on.</summary>
+        public int age;
+
+        /// <summary>Hexes touching this one. Kept by HexGridManager as cells spawn, territory included.</summary>
+        public readonly List<HexCell> Neighbours = new();
+
         [SerializeField] private Renderer tileRenderer;
 
         private Color _baseColor;
@@ -25,6 +32,36 @@ namespace Solarpunk.Grid
         private float _restingY;
 
         public bool IsEmpty => builtTile == null;
+
+        /// <summary>False while a planted tile is still growing in: it yields nothing and is not yet a neighbour.</summary>
+        public bool IsMature => builtTile == null || age >= builtTile.maturesAfter;
+
+        public int YearsToMaturity => builtTile == null ? 0 : Mathf.Max(0, builtTile.maturesAfter - age);
+
+        /// <summary>Puts a tile on this hex, its timer starting from zero.</summary>
+        public void Place(TileDefinition definition, int startingAge = 0)
+        {
+            builtTile = definition;
+            age = startingAge;
+            SetStructure(StructureFactory.Create(definition));
+        }
+
+        /// <summary>
+        /// What stands around this hex, in research's target syntax: each grown
+        /// neighbour's asset name, "cat:Category" and "tag:x" for each tag.
+        /// </summary>
+        public string[] NeighbourKeys()
+        {
+            var keys = new List<string>();
+            foreach (HexCell n in Neighbours)
+            {
+                if (n.builtTile == null || !n.IsMature) continue;
+                keys.Add(n.builtTile.name);
+                keys.Add("cat:" + n.builtTile.category);
+                foreach (string tag in n.builtTile.tags) keys.Add("tag:" + tag);
+            }
+            return keys.ToArray();
+        }
 
         private void Awake()
         {

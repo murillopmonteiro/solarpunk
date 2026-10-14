@@ -72,6 +72,41 @@ namespace Solarpunk.Managers
             return delta;
         }
 
+        private readonly System.Random _rng = new();
+
+        /// <summary>
+        /// Ages every standing tile a year, then fires the periodic rules research hangs
+        /// on those timers: Biomass felling its nearest forest, Rewilding seeding the
+        /// next hex. Collected first and applied after, so a forest seeded this year is
+        /// not aged or fired in the same pass.
+        /// </summary>
+        private void TickHexTimers()
+        {
+            var fells = new List<HexCell>();
+            var spreads = new List<HexCell>();
+
+            foreach (HexCell hex in gridManager.Cells.Values)
+            {
+                if (hex.builtTile == null) continue;
+                hex.age++;
+                if (researchManager == null) continue;
+
+                TileFacts facts = TileEconomy.Facts(hex.builtTile, hex.cityLevel, hex);
+                if (Fires(researchManager.Period(EffectKind.FellForest, facts), hex.age)) fells.Add(hex);
+                if (Fires(researchManager.Period(EffectKind.SpreadForest, facts), hex.age)) spreads.Add(hex);
+            }
+
+            foreach (HexCell hex in fells) gridManager.FellNearestForest(hex);
+
+            // A forest felled for fuel this year seeds nothing.
+            foreach (HexCell hex in spreads)
+            {
+                if (hex.builtTile != null) gridManager.SpreadForest(hex, _rng);
+            }
+        }
+
+        private static bool Fires(int period, int age) => period > 0 && age % period == 0;
+
         public void AdvanceTurn()
         {
             if (resourceManager.GameOver) return;
@@ -94,6 +129,8 @@ namespace Solarpunk.Managers
             // Rolled after the year's production so an event acts on the stats the
             // player is about to see. Null only in a scene generated before events.
             if (randomEvents != null) randomEvents.RollForYear(year);
+
+            TickHexTimers();
 
             foreach (var pair in gridManager.Cells)
             {

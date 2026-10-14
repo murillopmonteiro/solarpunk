@@ -22,5 +22,15 @@ MonoBehaviour:
   requireAny: 0
   position: {x: 0, y: 4.3}
   branch: industry
-  effects: []
-  pendingNote: Needs a plant-a-forest action and hex timers.
+  effects:
+  - kind: 8
+    target: 1
+    key: Floresta
+    resource: 0
+    add: 0
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: 

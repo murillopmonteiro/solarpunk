@@ -18,6 +18,8 @@ MonoBehaviour:
   buildCost: 300
   clearCost: 0
   playerBuildable: 1
+  maxOnBoard: 0
+  maturesAfter: 0
   perTurnEffect:
     energy: 10
     money: -3
@@ -36,4 +38,4 @@ MonoBehaviour:
   tags:
   - fossil
   placeholderColor: {r: 0.26, g: 0.26, b: 0.28, a: 1}
-  structurePrefab: {fileID: 3074848034994780617, guid: 6a32a347dc0d8364498923a0cb0591d2, type: 3}
+  structurePrefab: {fileID: 5246573746859205463, guid: 6a32a347dc0d8364498923a0cb0591d2, type: 3}

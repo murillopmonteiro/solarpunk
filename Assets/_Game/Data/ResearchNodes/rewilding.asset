@@ -22,5 +22,15 @@ MonoBehaviour:
   requireAny: 0
   position: {x: 0, y: 5.3}
   branch: industry
-  effects: []
-  pendingNote: Needs hex neighbours and timers.
+  effects:
+  - kind: 14
+    target: 1
+    key: Floresta
+    resource: 0
+    add: 25
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: 

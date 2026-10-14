@@ -277,7 +277,12 @@ namespace Solarpunk.UI
                 Refresh();
                 selectionController.RefreshSelection();
             };
-            if (researchManager != null) researchManager.OnResearchChanged += Refresh;
+            if (researchManager != null)
+            {
+                researchManager.OnResearchChanged += Refresh;
+                // An unlock can add build options or the territory offer to the open panel.
+                researchManager.OnResearchChanged += () => _buildPanel.Show(selectionController.Selected);
+            }
         }
 
         private void Refresh()

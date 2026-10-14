@@ -23,4 +23,5 @@ MonoBehaviour:
   position: {x: -1, y: -5.3}
   branch: science
   effects: []
-  pendingNote: Needs a Geothermal tile.
+  pendingNote: Its effect has no numbers yet. Its earthquake tradeoff needs per-tile
+    risk rolls.

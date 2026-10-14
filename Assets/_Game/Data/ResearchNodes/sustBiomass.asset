@@ -22,5 +22,15 @@ MonoBehaviour:
   requireAny: 0
   position: {x: -2, y: -5.3}
   branch: science
-  effects: []
-  pendingNote: Needs hex neighbours, which the game doesn't track yet.
+  effects:
+  - kind: 0
+    target: 1
+    key: Biomassa
+    resource: 2
+    add: 2
+    multiply: 1
+    minCityLevel: 0
+    nextTo: Floresta
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: 

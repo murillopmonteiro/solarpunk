@@ -43,7 +43,19 @@ namespace Solarpunk.Research
         /// The year's energy surplus is sold instead of stored. On Money, <c>add</c> is the
         /// price per unit sold; on any other resource, <c>add</c> lands once in a year that exports.
         /// </summary>
-        EnergyExport
+        EnergyExport,
+
+        /// <summary>Removes the board limit on the tile named by <c>key</c> (Oil Tracking).</summary>
+        LiftBuildLimit,
+
+        /// <summary>Every <c>add</c> years a matched tile fells the nearest forest (Biomass).</summary>
+        FellForest,
+
+        /// <summary>Every <c>add</c> years a matched tile seeds a forest on an empty open neighbour (Rewilding).</summary>
+        SpreadForest,
+
+        /// <summary>Coast hexes can be bought on the shore, the first at <c>add</c>, each next one dearer.</summary>
+        BuyTerritory
     }
 
     /// <summary>Which tiles an effect applies to.</summary>
@@ -85,6 +97,10 @@ namespace Solarpunk.Research
         [UnityEngine.Tooltip("City effects only: applies to cities at this level or above. 0 = every city.")]
         public int minCityLevel;
 
+        [UnityEngine.Tooltip("Only applies to a tile with a grown neighbour matching this, in target syntax: " +
+                             "a tile name, \"cat:City\" or \"tag:x\". Empty = anywhere.")]
+        public string nextTo = "";
+
         [UnityEngine.Tooltip("True when this effect is the node's cost rather than its benefit.")]
         public bool isTradeoff;
 
@@ -94,6 +110,8 @@ namespace Solarpunk.Research
         public bool Matches(TileFacts tile)
         {
             if (minCityLevel > 0 && (tile.category != "City" || tile.cityLevel < minCityLevel)) return false;
+            if (!string.IsNullOrEmpty(nextTo) && (tile.neighbours == null || Array.IndexOf(tile.neighbours, nextTo) < 0))
+                return false;
 
             return target switch
             {
@@ -116,5 +134,8 @@ namespace Solarpunk.Research
         public string category;
         public string[] tags;
         public int cityLevel;
+
+        /// <summary>What stands next to this tile on the board (HexCell.NeighbourKeys). Null off the board.</summary>
+        public string[] neighbours;
     }
 }

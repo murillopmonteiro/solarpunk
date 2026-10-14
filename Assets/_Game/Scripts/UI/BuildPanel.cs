@@ -85,7 +85,7 @@ namespace Solarpunk.UI
                 _terrainLabel.text = Loc.T("build.clickToInspect");
                 _terrainDotImage.color = Color.clear;
                 _sectionLabel.text = "";
-                Resize(0);
+                Resize(ShowTerritoryOffer());
                 return;
             }
 
@@ -112,9 +112,13 @@ namespace Solarpunk.UI
         {
             _sectionLabel.text = Loc.T("build.buildHere");
 
-            // What can go here comes first; blocked options sink below, palette order kept within each.
+            // Eighteen tiles do not fit the column, so only what this hex could ever take
+            // is listed: wrong terrain and not-yet-researched tiles are left out (the
+            // research tree shows what is coming). What can go here comes first; blocked
+            // options sink below, palette order kept within each.
             var options = _buildController.Palette
-                .Where(d => d != null)
+                .Where(d => d != null && d.AllowedOn(cell.relief))
+                .Where(d => _buildController.Research == null || !_buildController.Research.IsTileLocked(d.name))
                 .Select(d => (definition: d, blocked: _buildController.BlockReason(cell, d)))
                 .OrderBy(o => o.blocked != null);
 
@@ -150,7 +154,9 @@ namespace Solarpunk.UI
 
             int index = 0;
 
-            string effect = StatFormat.EffectSummary(_buildController.OutputOf(cell));
+            string effect = cell.IsMature
+                ? StatFormat.EffectSummary(_buildController.OutputOf(cell))
+                : Loc.T("build.maturesIn", cell.YearsToMaturity);
             if (!isCity && built.BonusOn(cell.relief) != null)
                 effect += "   ·   " + Loc.T("build.bonus", TerrainReliefNames.Describe(cell.relief).ToUpper());
 
@@ -185,6 +191,17 @@ namespace Solarpunk.UI
                 () => _buildController.Demolish(cell));
 
             return index;
+        }
+
+        /// <summary>With nothing selected: the one board-wide action, buying a coast hex, once researched.</summary>
+        private int ShowTerritoryOffer()
+        {
+            float price = _buildController.TerritoryPrice;
+            if (price <= 0f) return 0;
+
+            CreateRow(0, Loc.T("build.buyTerritory"), $"${price:0}", Loc.T("build.buyTerritoryDetail"), null,
+                HexCell.ColorForRelief(TerrainRelief.Coast), () => _buildController.TryBuyTerritory());
+            return 1;
         }
 
         /// <param name="onClick">null makes the row a read-only info card.</param>
@@ -241,7 +258,14 @@ namespace Solarpunk.UI
                 : HeaderHeight + rowCount * (RowHeight + RowGap) - RowGap + BottomPad;
 
             _root.sizeDelta = new Vector2(PanelWidth, height);
+
+            // Late game on open ground still lists ~14 tiles; shrink the whole card to stay
+            // above the Research / Next Year stack rather than run under it.
+            _root.localScale = Vector3.one * Mathf.Min(1f, MaxHeight / height);
         }
+
+        /// <summary>Tallest the card may be at reference resolution and still clear the bottom-right buttons.</summary>
+        private const float MaxHeight = 780f;
 
         private void ClearRows()
         {
