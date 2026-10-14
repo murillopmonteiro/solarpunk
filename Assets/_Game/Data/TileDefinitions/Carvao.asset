@@ -14,8 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Tiles.TileDefinition
   displayName: Carvao
   category: 1
-  requiredRelief: 0
+  allowedRelief: 
   buildCost: 300
+  clearCost: 0
+  playerBuildable: 1
   perTurnEffect:
     energy: 10
     money: -3
@@ -28,6 +30,10 @@ MonoBehaviour:
     sustainability: 0
     population: 0
     happiness: 0
-  requiresExtraction: 1
+  terrainBonuses: []
+  producedFuel: 0
+  requiredFuel: 1
+  tags:
+  - fossil
   placeholderColor: {r: 0.26, g: 0.26, b: 0.28, a: 1}
-  structurePrefab: {fileID: 0}
+  structurePrefab: {fileID: 3074848034994780617, guid: 6a32a347dc0d8364498923a0cb0591d2, type: 3}

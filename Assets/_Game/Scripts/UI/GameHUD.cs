@@ -1,6 +1,8 @@
 using Solarpunk.Core;
+using Solarpunk.Events;
 using Solarpunk.Grid;
 using Solarpunk.Managers;
+using Solarpunk.Research;
 using Solarpunk.Tiles;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -21,13 +23,23 @@ namespace Solarpunk.UI
         [SerializeField] private SelectionController selectionController;
         [SerializeField] private BuildController buildController;
         [SerializeField] private CityGrowth cityGrowth;
+        [SerializeField] private ResearchManager researchManager;
+        [SerializeField] private RandomEventManager randomEvents;
 
         private ResourceStack _resources;
         private BuildPanel _buildPanel;
+        private ResearchPanel _researchPanel;
         private Button _nextTurnButton;
+        private Text _researchLabel;
         private Text _yearLabel;
         private RectTransform _gameOverBanner;
         private Text _gameOverText;
+        private GameObject _canvas;
+        private bool? _endedInVictory;
+
+        private const int SunRays = 12;
+        private static readonly Color SunUnlit = new Color(0.89f, 0.84f, 0.71f);
+        private readonly Image[] _sunRays = new Image[SunRays];
 
         private void Start()
         {
@@ -35,11 +47,31 @@ namespace Solarpunk.UI
             HookEvents();
             Refresh();
             _buildPanel.Show(null);
+            Loc.Changed += Rebuild;
+        }
+
+        private void OnDestroy() => Loc.Changed -= Rebuild;
+
+        /// <summary>
+        /// Every label takes its text from <see cref="Loc"/> when it is built, so a
+        /// language switch tears the canvas down and builds it again rather than
+        /// tracking each label. The game state lives in the managers, untouched.
+        /// </summary>
+        private void Rebuild()
+        {
+            Destroy(_canvas);
+            BuildCanvas();
+            Refresh();
+            _buildPanel.Show(selectionController.Selected);
+            if (_endedInVictory.HasValue) ShowGameOver(_endedInVictory.Value);
         }
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Space)) turnManager.AdvanceTurn();
+            if (Input.GetKeyDown(KeyCode.Escape) && _researchPanel.IsOpen) _researchPanel.Show(false);
+
+            // Space must not tick a year away while the player is reading the tree.
+            if (Input.GetKeyDown(KeyCode.Space) && !_researchPanel.IsOpen) turnManager.AdvanceTurn();
         }
 
         private void BuildCanvas()
@@ -48,6 +80,7 @@ namespace Solarpunk.UI
 
             var canvasGo = new GameObject("HUD Canvas", typeof(RectTransform));
             canvasGo.transform.SetParent(transform, false);
+            _canvas = canvasGo;
 
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -66,9 +99,17 @@ namespace Solarpunk.UI
             _buildPanel = canvasGo.AddComponent<BuildPanel>();
             _buildPanel.Build(canvasGo.transform, buildController, cityGrowth);
 
+            CreateYearMedallion(canvasGo.transform);
             CreateTurnControls(canvasGo.transform);
             CreateTerrainKey(canvasGo.transform);
             CreateGameOverBanner(canvasGo.transform);
+
+            // Built last so the overlay sorts above every other piece of the HUD.
+            _researchPanel = canvasGo.AddComponent<ResearchPanel>();
+            _researchPanel.Build(canvasGo.transform, researchManager);
+
+            // Above even the research overlay: a waiting card is the one thing the player must answer.
+            canvasGo.AddComponent<EventCard>().Build(canvasGo.transform, randomEvents);
         }
 
         private static void EnsureEventSystem()
@@ -80,91 +121,143 @@ namespace Solarpunk.UI
             go.AddComponent<StandaloneInputModule>();
         }
 
-        /// <summary>Year readout and the primary action, anchored bottom-right.</summary>
+        /// <summary>
+        /// Year medallion top-left: a sun whose rays light up as the run's
+        /// <see cref="TurnManager.VictoryTurn"/> years pass, next to the count.
+        /// </summary>
+        private void CreateYearMedallion(Transform canvas)
+        {
+            RectTransform panel = UIFactory.Panel("Year", canvas);
+            UIFactory.Place(panel, UIFactory.TopLeft, 34f, -ResourceStack.Top, 236f, ResourceStack.Height);
+
+            var centre = new Vector2(62f, -60f);
+            for (int i = 0; i < SunRays; i++)
+            {
+                // Each ray hangs off a pivot at the sun's centre, so turning the pivot places it.
+                RectTransform pivot = UIFactory.NewRect($"RayPivot{i}", panel);
+                UIFactory.Place(pivot, UIFactory.TopLeft, centre.x, centre.y, 0f, 0f);
+                pivot.localRotation = Quaternion.Euler(0f, 0f, -i * 360f / SunRays);
+
+                Image ray = UIFactory.Ray("Ray", pivot, SunUnlit, 11f, 14f);
+                RectTransform rect = ray.rectTransform;
+                rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0f);
+                rect.anchoredPosition = new Vector2(0f, 24f);
+                _sunRays[i] = ray;
+            }
+
+            RectTransform disc = UIFactory.HexBadge("Sun", panel, UIFactory.Sun, 44f, 0f);
+            UIFactory.Place(disc, new Vector2(0f, 1f), centre.x - 22f, centre.y + 19f, 44f, 38f);
+
+            Text caption = UIFactory.Label("Caption", panel, Loc.T("hud.yearCaption"), 14, UIFactory.FaintColor);
+            UIFactory.Place(caption.rectTransform, UIFactory.TopLeft, 118f, -18f, 110f, 18f);
+
+            _yearLabel = UIFactory.Label("Value", panel, "0", 44, UIFactory.TextColor,
+                TextAnchor.UpperLeft, FontStyle.Bold);
+            UIFactory.Place(_yearLabel.rectTransform, UIFactory.TopLeft, 117f, -30f, 110f, 58f);
+
+            Text of = UIFactory.Label("Of", panel, Loc.T("hud.yearOf", TurnManager.VictoryTurn), 16,
+                UIFactory.MutedColor);
+            UIFactory.Place(of.rectTransform, UIFactory.TopLeft, 118f, -84f, 110f, 22f);
+        }
+
+        /// <summary>Research and the primary action, stacked bottom-right.</summary>
         private void CreateTurnControls(Transform canvas)
         {
-            RectTransform yearPill = UIFactory.Capsule("YearPill", canvas, UIFactory.Ink);
-            UIFactory.Place(yearPill, UIFactory.BottomRight, -18f, 116f, 244f, 44f);
+            _nextTurnButton = UIFactory.ChunkyButton("NextTurn", canvas, UIFactory.LeafLight, UIFactory.LeafDark,
+                UIFactory.BottomRight, -34f, 48f, 340f, 104f, 9f);
 
-            _yearLabel = UIFactory.Label("Year", yearPill, "YEAR 0", 17, UIFactory.TextColor,
-                TextAnchor.MiddleCenter, FontStyle.Bold);
-            UIFactory.Fill(_yearLabel.rectTransform);
-
-            _nextTurnButton = UIFactory.ChunkyButton("NextTurn", canvas, UIFactory.Leaf, UIFactory.LeafDark,
-                UIFactory.BottomRight, -18f, 30f, 244f, 74f);
-
-            Text label = UIFactory.Label("Label", _nextTurnButton.transform, "NEXT YEAR", 21,
-                new Color(0.05f, 0.16f, 0.08f), TextAnchor.MiddleCenter, FontStyle.Bold);
+            Text label = UIFactory.Label("Label", _nextTurnButton.transform, Loc.T("hud.nextYear"), 36,
+                UIFactory.LeafText, TextAnchor.MiddleCenter, FontStyle.Bold);
             UIFactory.Fill(label.rectTransform);
+            _nextTurnButton.onClick.AddListener(turnManager.AdvanceTurn);
+
+            // Sun-gold: research is the one thing on screen that wears it.
+            Button research = UIFactory.ChunkyButton("Research", canvas, UIFactory.Sun, UIFactory.SunDark,
+                UIFactory.BottomRight, -34f, 180f, 340f, 76f);
+            research.onClick.AddListener(() => _researchPanel.Toggle());
+
+            _researchLabel = UIFactory.Label("Label", research.transform, Loc.T("hud.research"), 26,
+                UIFactory.SunText, TextAnchor.MiddleCenter, FontStyle.Bold);
+            UIFactory.Fill(_researchLabel.rectTransform);
+
+            // Under the year, out of the way: touched once a session at most, and the
+            // right-hand column is the build panel's.
+            Button language = UIFactory.ChunkyButton("Language", canvas, UIFactory.Paper,
+                UIFactory.Slab, UIFactory.TopLeft, 34f, -168f, 170f, 46f, 5f);
+            language.onClick.AddListener(() =>
+                Loc.Set(Loc.Current == Language.English ? Language.Portuguese : Language.English));
+
+            Text languageLabel = UIFactory.Label("Label", language.transform, Loc.T("hud.switchLanguage"), 15,
+                UIFactory.MutedColor, TextAnchor.MiddleCenter);
+            UIFactory.Fill(languageLabel.rectTransform);
         }
 
         /// <summary>Bottom-left key so the hex colours are readable without clicking each one.</summary>
         private void CreateTerrainKey(Transform canvas)
         {
-            const float width = 268f;
-            const float rowHeight = 24f;
-            const float headerHeight = 34f;
+            const float width = 360f;
+            const float rowHeight = 32f;
+            const float headerHeight = 50f;
 
             var entries = new (TerrainRelief relief, string label)[]
             {
-                (TerrainRelief.Mutable, "Open, build anything"),
-                (TerrainRelief.Waterfall, "Waterfall, hydro only"),
-                (TerrainRelief.Coast, "Coast, tidal only"),
-                (TerrainRelief.Mountain, "Mountain, favours wind")
+                (TerrainRelief.Mutable, Loc.T("hud.keyOpen")),
+                (TerrainRelief.Waterfall, Loc.T("hud.keyWaterfall")),
+                (TerrainRelief.Coast, Loc.T("hud.keyCoast")),
+                (TerrainRelief.Mountain, Loc.T("hud.keyMountain"))
             };
 
-            // The hint lives inside this card: as loose text it sat grey-on-grass
+            // The hint lives inside this card: as loose text it sat on the board
             // and failed to read at all.
-            const float hintHeight = 34f;
-            float height = headerHeight + entries.Length * rowHeight + hintHeight + 10f;
+            const float hintHeight = 48f;
+            float height = headerHeight + entries.Length * rowHeight + hintHeight + 14f;
 
-            RectTransform panel = UIFactory.Card("TerrainKey", canvas, UIFactory.Ink);
-            UIFactory.Place(panel, UIFactory.BottomLeft, 18f, 22f, width, height);
+            RectTransform panel = UIFactory.Panel("TerrainKey", canvas);
+            UIFactory.Place(panel, UIFactory.BottomLeft, 34f, 48f, width, height);
 
-            Text title = UIFactory.Label("Title", panel, "TERRAIN", 10, UIFactory.FaintColor);
-            UIFactory.Place(title.rectTransform, UIFactory.TopLeft, 16f, -12f, width - 32f, 14f);
+            Text title = UIFactory.Label("Title", panel, Loc.T("hud.terrain"), 14, UIFactory.FaintColor);
+            UIFactory.Place(title.rectTransform, UIFactory.TopLeft, 24f, -20f, width - 48f, 18f);
 
             for (int i = 0; i < entries.Length; i++)
             {
                 float y = -(headerHeight + i * rowHeight);
 
-                RectTransform dot = UIFactory.Circle($"Dot{i}", panel,
-                    HexCell.ColorForRelief(entries[i].relief), 12f);
-                UIFactory.Place(dot, UIFactory.TopLeft, 16f, y - 3f, 12f, 12f);
+                RectTransform chip = UIFactory.HexBadge($"Chip{i}", panel,
+                    HexCell.ColorForRelief(entries[i].relief), 26f, 0f);
+                UIFactory.Place(chip, UIFactory.TopLeft, 24f, y - 2f, 26f, 23f);
 
-                Text label = UIFactory.Label($"Key{i}", panel, entries[i].label, 12, UIFactory.MutedColor);
-                UIFactory.Place(label.rectTransform, UIFactory.TopLeft, 36f, y - 4f, width - 48f, 16f);
+                Text label = UIFactory.Label($"Key{i}", panel, entries[i].label, 18, UIFactory.TextColor);
+                UIFactory.Place(label.rectTransform, UIFactory.TopLeft, 62f, y - 1f, width - 80f, 26f);
             }
 
-            Text hint = UIFactory.Label("Hint", panel,
-                "Click a hexagon to build.\nSpace also advances a year.", 11, UIFactory.FaintColor);
+            Text hint = UIFactory.Label("Hint", panel, Loc.T("hud.hint"), 15, UIFactory.FaintColor);
             hint.verticalOverflow = VerticalWrapMode.Overflow;
-            UIFactory.Place(hint.rectTransform, UIFactory.BottomLeft, 16f, 10f, width - 32f, 30f);
+            UIFactory.Place(hint.rectTransform, UIFactory.BottomLeft, 24f, 18f, width - 48f, 44f);
         }
 
         private void CreateGameOverBanner(Transform canvas)
         {
-            _gameOverBanner = UIFactory.Card("GameOver", canvas, UIFactory.InkSolid);
+            _gameOverBanner = UIFactory.Panel("GameOver", canvas);
             _gameOverBanner.anchorMin = new Vector2(0.5f, 0.5f);
             _gameOverBanner.anchorMax = new Vector2(0.5f, 0.5f);
             _gameOverBanner.pivot = new Vector2(0.5f, 0.5f);
             _gameOverBanner.anchoredPosition = Vector2.zero;
-            _gameOverBanner.sizeDelta = new Vector2(520f, 216f);
+            _gameOverBanner.sizeDelta = new Vector2(640f, 290f);
 
-            _gameOverText = UIFactory.Label("Text", _gameOverBanner, "", 23, UIFactory.TextColor,
+            _gameOverText = UIFactory.Label("Text", _gameOverBanner, "", 32, UIFactory.TextColor,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
-            _gameOverText.rectTransform.anchorMin = new Vector2(0f, 0.36f);
+            _gameOverText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _gameOverText.rectTransform.anchorMin = new Vector2(0f, 0.38f);
             _gameOverText.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _gameOverText.rectTransform.offsetMin = new Vector2(26f, 0f);
-            _gameOverText.rectTransform.offsetMax = new Vector2(-26f, -22f);
+            _gameOverText.rectTransform.offsetMin = new Vector2(34f, 0f);
+            _gameOverText.rectTransform.offsetMax = new Vector2(-34f, -26f);
 
-            Button restart = UIFactory.ChunkyButton("Restart", _gameOverBanner, UIFactory.Leaf,
-                UIFactory.LeafDark, new Vector2(0.5f, 0f), 0f, 30f, 228f, 52f);
-            RectTransform restartRect = restart.GetComponent<RectTransform>();
-            restartRect.anchoredPosition = new Vector2(-114f, 30f);
+            Button restart = UIFactory.ChunkyButton("Restart", _gameOverBanner, UIFactory.LeafLight,
+                UIFactory.LeafDark, new Vector2(0.5f, 0f), 0f, 38f, 300f, 70f);
 
-            Text restartLabel = UIFactory.Label("Label", restart.transform, "PLAY AGAIN", 16,
-                new Color(0.05f, 0.16f, 0.08f), TextAnchor.MiddleCenter, FontStyle.Bold);
+            Text restartLabel = UIFactory.Label("Label", restart.transform, Loc.T("hud.playAgain"), 26,
+                UIFactory.LeafText, TextAnchor.MiddleCenter, FontStyle.Bold);
             UIFactory.Fill(restartLabel.rectTransform);
 
             restart.onClick.AddListener(() =>
@@ -184,24 +277,37 @@ namespace Solarpunk.UI
                 Refresh();
                 selectionController.RefreshSelection();
             };
-            _nextTurnButton.onClick.AddListener(turnManager.AdvanceTurn);
+            if (researchManager != null) researchManager.OnResearchChanged += Refresh;
         }
 
         private void Refresh()
         {
             ResourceVector perTurn = turnManager.CalculateTurnDelta();
             _resources.SetResources(resourceManager.Current, perTurn);
-            _yearLabel.text = $"YEAR {turnManager.CurrentTurn}";
+            _yearLabel.text = turnManager.CurrentTurn.ToString();
+
+            // One ray lit from year 0, all twelve at the victory year.
+            int lit = Mathf.Clamp(Mathf.CeilToInt(SunRays * (float)turnManager.CurrentTurn / TurnManager.VictoryTurn),
+                1, SunRays);
+            for (int i = 0; i < SunRays; i++) _sunRays[i].color = i < lit ? UIFactory.Sun : SunUnlit;
             _nextTurnButton.interactable = !resourceManager.GameOver;
+
+            // The count rides on the button so research is legible without opening it.
+            if (researchManager != null)
+            {
+                _researchLabel.text = Loc.T("hud.researchCount", Mathf.FloorToInt(researchManager.Points));
+                _researchPanel.Refresh();
+            }
         }
 
         private void ShowGameOver(bool victory)
         {
+            _endedInVictory = victory;
             _gameOverBanner.gameObject.SetActive(true);
             _gameOverText.text = victory
-                ? $"VICTORY\n\nYou reached year {TurnManager.VictoryTurn}."
-                : "COLLAPSE\n\nSustainability or happiness hit zero.";
-            _gameOverText.color = victory ? UIFactory.Leaf : UIFactory.WarnColor;
+                ? Loc.T("hud.victory", TurnManager.VictoryTurn)
+                : Loc.T("hud.collapse");
+            _gameOverText.color = victory ? UIFactory.LeafDark : UIFactory.WarnColor;
         }
     }
 }

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: nmv5b6gig
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Entrateinment
+  description: 
+  tradeoff: 'Stadiums and screens: each city uses 1 more energy.'
+  cost: 50
+  prerequisites:
+  - {fileID: 11400000, guid: e546cf72c8d3b8a48bebf4a95c4a2b38, type: 2}
+  requireAny: 0
+  position: {x: -3, y: 3.4}
+  branch: city
+  effects: []
+  pendingNote: Its effect has no numbers yet. Researching it already clears City
+    Development 2's crowding.

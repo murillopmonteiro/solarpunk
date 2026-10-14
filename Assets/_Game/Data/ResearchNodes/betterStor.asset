@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: betterStor
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Better Storage
+  description: "Stored energy cap 150 \u2192 500."
+  tradeoff: "Batteries need lithium: \u22121 sustainability a year. Brine mining
+    drinks scarce water in dry regions."
+  cost: 120
+  prerequisites:
+  - {fileID: 11400000, guid: 46a2805805a00c54bb848707315d61ad, type: 2}
+  requireAny: 0
+  position: {x: 2, y: 2}
+  branch: energy
+  effects: []
+  pendingNote: Needs an energy storage cap, which the game doesn't have yet.

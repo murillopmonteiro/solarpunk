@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: wind
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Wind Turbines
+  description: 'Unlocks Wind. On a mountain: +20% energy, +20% build cost.'
+  tradeoff: "Wind next to a city: \u22120.5 happiness a year (noise, the view). Community
+    Energy turns this into +0.5."
+  cost: 60
+  prerequisites:
+  - {fileID: 11400000, guid: a222bb731788bb04d8cd88853c95cf1d, type: 2}
+  requireAny: 0
+  position: {x: 0.5, y: -4.3}
+  branch: science
+  effects:
+  - kind: 8
+    target: 1
+    key: Eolica
+    resource: 0
+    add: 0
+    multiply: 1
+    minCityLevel: 0
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: Its tradeoff next to cities needs hex neighbours.

@@ -45,18 +45,16 @@ namespace Solarpunk.Managers
 
         private void Start() => OnResourcesChanged?.Invoke(Current);
 
-        public bool CanAfford(float cost) => Current.money >= cost;
-
-        /// <summary>Immediate spend (construction). Does not run turn resolution.</summary>
-        public bool TrySpend(float cost)
+        /// <summary>
+        /// Immediate spend (construction). Does not run turn resolution. Never refused:
+        /// money may go negative, and a negative balance is debt, with no limit or interest.
+        /// </summary>
+        public void Spend(float cost)
         {
-            if (!CanAfford(cost)) return false;
-
             ResourceVector next = Current;
             next.money -= cost;
             Current = next;
             OnResourcesChanged?.Invoke(Current);
-            return true;
         }
 
         /// <summary>Immediate refund (demolition).</summary>

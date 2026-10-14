@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: ccs
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Carbon Capture
+  description: "Fossil plant sustainability penalties halved, but their energy \u221220%."
+  tradeoff: Fossil plants lose 20% of their energy.
+  cost: 350
+  prerequisites:
+  - {fileID: 11400000, guid: 8ce30f1cfa398f84fad8bd88e9ed03db, type: 2}
+  - {fileID: 11400000, guid: 2383a550a71da524999178b0e7f2325e, type: 2}
+  requireAny: 0
+  position: {x: 5, y: -2}
+  branch: energy
+  effects:
+  - kind: 0
+    target: 3
+    key: fossil
+    resource: 2
+    add: 0
+    multiply: 0.5
+    minCityLevel: 0
+    isTradeoff: 0
+    suppressedBy: []
+  - kind: 0
+    target: 3
+    key: fossil
+    resource: 0
+    add: 0
+    multiply: 0.8
+    minCityLevel: 0
+    isTradeoff: 1
+    suppressedBy: []
+  pendingNote: 

@@ -14,8 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Tiles.TileDefinition
   displayName: Maremotriz
   category: 1
-  requiredRelief: 3
+  allowedRelief: 03000000
   buildCost: 1200
+  clearCost: 0
+  playerBuildable: 1
   perTurnEffect:
     energy: 25
     money: -6
@@ -28,6 +30,10 @@ MonoBehaviour:
     sustainability: 0
     population: 0
     happiness: 0
-  requiresExtraction: 0
+  terrainBonuses: []
+  producedFuel: 0
+  requiredFuel: 0
+  tags:
+  - renewable
   placeholderColor: {r: 0.3, g: 0.8, b: 0.78, a: 1}
   structurePrefab: {fileID: 0}

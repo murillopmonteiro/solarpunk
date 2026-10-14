@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: sustBiomass
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Sustainable Biomass
+  description: "Biomass next to a forest: sustainability \u22121 \u2192 +1."
+  tradeoff: 
+  cost: 140
+  prerequisites:
+  - {fileID: 11400000, guid: bdba3a5d9f4d8f74386ab89434990b80, type: 2}
+  - {fileID: 11400000, guid: 11087c1c4592d3d42a838f00300fbc34, type: 2}
+  requireAny: 0
+  position: {x: -2, y: -5.3}
+  branch: science
+  effects: []
+  pendingNote: Needs hex neighbours, which the game doesn't track yet.

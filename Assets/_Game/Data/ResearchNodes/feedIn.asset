@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: feedIn
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Feed-in Tariff
+  description: "Wind, Solar, Tidal and Wave build costs \u221225%."
+  tradeoff: "Subsidies: \u22122 money per clean plant a year. Germany's renewable
+    surcharge raised household bills for two decades."
+  cost: 200
+  prerequisites:
+  - {fileID: 11400000, guid: c0459db57d3ad5a4d961e456bd4f8fcf, type: 2}
+  - {fileID: 11400000, guid: e0bf1dfa6dc989f41a2747669aa0da2d, type: 2}
+  requireAny: 0
+  position: {x: 2.5, y: 5.3}
+  branch: industry
+  effects:
+  - kind: 1
+    target: 1
+    key: Eolica
+    resource: 0
+    add: 0
+    multiply: 0.75
+    minCityLevel: 0
+    isTradeoff: 0
+    suppressedBy: []
+  - kind: 1
+    target: 1
+    key: Solar
+    resource: 0
+    add: 0
+    multiply: 0.75
+    minCityLevel: 0
+    isTradeoff: 0
+    suppressedBy: []
+  - kind: 1
+    target: 1
+    key: Maremotriz
+    resource: 0
+    add: 0
+    multiply: 0.75
+    minCityLevel: 0
+    isTradeoff: 0
+    suppressedBy: []
+  - kind: 0
+    target: 1
+    key: Eolica
+    resource: 1
+    add: -2
+    multiply: 1
+    minCityLevel: 0
+    isTradeoff: 1
+    suppressedBy: []
+  - kind: 0
+    target: 1
+    key: Solar
+    resource: 1
+    add: -2
+    multiply: 1
+    minCityLevel: 0
+    isTradeoff: 1
+    suppressedBy: []
+  - kind: 0
+    target: 1
+    key: Maremotriz
+    resource: 1
+    add: -2
+    multiply: 1
+    minCityLevel: 0
+    isTradeoff: 1
+    suppressedBy: []
+  pendingNote: 

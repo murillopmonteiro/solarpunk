@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: geothermal
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Geothermal
+  description: "Unlocks Geothermal: mountain only, E +20, S +1, M \u22124, $900."
+  tradeoff: "Drilling can trigger small earthquakes: each plant has a 2% chance a
+    year of \u22123 happiness. A geothermal project in Basel was shut down after
+    a 2006 quake."
+  cost: 350
+  prerequisites:
+  - {fileID: 11400000, guid: 70755c1776b568d45be41b7c0705ce4d, type: 2}
+  - {fileID: 11400000, guid: 7c213872af3a5c143af971241d453744, type: 2}
+  requireAny: 0
+  position: {x: -1, y: -4.3}
+  branch: science
+  effects: []
+  pendingNote: Needs a Geothermal tile.

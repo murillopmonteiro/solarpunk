@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using Solarpunk.Events;
 using Solarpunk.Grid;
 using Solarpunk.Managers;
+using Solarpunk.Research;
 using Solarpunk.Tiles;
 using Solarpunk.UI;
 using UnityEditor;
@@ -42,17 +44,23 @@ namespace Solarpunk.EditorTools
 
         private static void CheckFont()
         {
-            Font font = UIFactory.Font;
-            if (font == null) Problems.Add("No built-in font resolved — every HUD label would render blank.");
-            else Debug.Log($"[Validate] Font: {font.name}");
+            // The fallback to the built-in font is silent at runtime, so a missing file shows up here instead.
+            foreach ((Font font, string expected) in new[] { (UIFactory.DisplayFont, "Fredoka"), (UIFactory.BodyFont, "Nunito") })
+            {
+                if (font == null) Problems.Add($"No {expected} font resolved — every HUD label would render blank.");
+                else if (!font.name.StartsWith(expected))
+                    Problems.Add($"{expected} missing from Resources/Fonts; the HUD fell back to {font.name}.");
+                else Debug.Log($"[Validate] Font: {font.name}");
+            }
         }
 
         private static void CheckTileDefinitions()
         {
+            int expected = TileDataFactory.OrderedNames.Length;
             string[] guids = AssetDatabase.FindAssets("t:TileDefinition", new[] { "Assets/_Game/Data" });
-            if (guids.Length != 10)
+            if (guids.Length != expected)
             {
-                Problems.Add($"Expected 10 TileDefinition assets, found {guids.Length}.");
+                Problems.Add($"Expected {expected} TileDefinition assets, found {guids.Length}.");
                 return;
             }
 
@@ -62,7 +70,7 @@ namespace Solarpunk.EditorTools
                 if (string.IsNullOrEmpty(def.displayName)) Problems.Add($"{def.name} has no displayName.");
             }
 
-            Debug.Log("[Validate] Tile definitions: 10 assets, all named.");
+            Debug.Log($"[Validate] Tile definitions: {expected} assets, all named.");
         }
 
         private static void CheckHexPrefab()
@@ -99,14 +107,19 @@ namespace Solarpunk.EditorTools
             if (!roots.SelectMany(r => r.GetComponentsInChildren<Light>(true)).Any())
                 Problems.Add("No light in the scene — everything would render flat black.");
 
-            RequireRefs<HexGridManager>(roots, "hexCellPrefab");
-            RequireRefs<CityGrowth>(roots, "resourceManager");
-            RequireRefs<TurnManager>(roots, "gridManager", "resourceManager", "cityGrowth");
-            RequireRefs<BuildController>(roots, "resourceManager");
+            RequireRefs<HexGridManager>(roots, "hexCellPrefab", "forestDefinition");
+            RequireRefs<CityGrowth>(roots, "resourceManager", "researchManager");
+            RequireRefs<TurnManager>(roots, "gridManager", "resourceManager", "cityGrowth", "researchManager",
+                "randomEvents");
+            RequireRefs<BuildController>(roots, "gridManager", "resourceManager", "cityGrowth", "researchManager");
             RequireRefs<SelectionController>(roots, "worldCamera");
             RequireRefs<GameManager>(roots, "gridManager", "resourceManager");
             RequireRefs<GameHUD>(roots, "resourceManager", "turnManager", "selectionController",
-                "buildController", "cityGrowth");
+                "buildController", "cityGrowth", "researchManager", "randomEvents");
+            RequireRefs<RandomEventManager>(roots, "resourceManager", "gridManager");
+
+            CheckResearchTree(roots);
+            CheckEventDeck(roots);
 
             var build = roots.SelectMany(r => r.GetComponentsInChildren<BuildController>(true)).FirstOrDefault();
             if (build != null)
@@ -116,10 +129,50 @@ namespace Solarpunk.EditorTools
                     .ToList();
                 Debug.Log($"[Validate] Palette contents: {string.Join(", ", names)}");
 
-                if (build.Palette.Count != 10) Problems.Add($"BuildController palette has {build.Palette.Count} entries, expected 10.");
+                int expectedTiles = TileDataFactory.LoadPalette().Count;
+                if (build.Palette.Count != expectedTiles) Problems.Add($"BuildController palette has {build.Palette.Count} entries, expected {expectedTiles}.");
                 else if (build.Palette.Any(p => p == null)) Problems.Add("BuildController palette contains a null entry.");
-                else Debug.Log("[Validate] Build palette: 10 tiles wired.");
+                else Debug.Log($"[Validate] Build palette: {expectedTiles} tiles wired.");
             }
+        }
+
+        /// <summary>An empty tree would render a research panel that is blank but not broken.</summary>
+        private static void CheckResearchTree(List<GameObject> roots)
+        {
+            var manager = roots.SelectMany(r => r.GetComponentsInChildren<ResearchManager>(true)).FirstOrDefault();
+            if (manager == null)
+            {
+                Problems.Add("ResearchManager is missing from the scene.");
+                return;
+            }
+
+            int expected = ResearchTreeFactory.OrderedNames.Length;
+            if (manager.Tree.Count != expected)
+                Problems.Add($"ResearchManager tree has {manager.Tree.Count} nodes, expected {expected}.");
+            else if (manager.Tree.Any(n => n == null))
+                Problems.Add("ResearchManager tree contains a null node.");
+            else
+                Debug.Log($"[Validate] Research tree: {expected} nodes wired.");
+        }
+
+        /// <summary>An empty deck rolls forever and never fires, which looks like nothing is wrong.</summary>
+        private static void CheckEventDeck(List<GameObject> roots)
+        {
+            var manager = roots.SelectMany(r => r.GetComponentsInChildren<RandomEventManager>(true)).FirstOrDefault();
+            if (manager == null)
+            {
+                Problems.Add("RandomEventManager is missing from the scene.");
+                return;
+            }
+
+            int expected = EventDeckFactory.OrderedNames.Length;
+            if (manager.Deck.Count != expected)
+                Problems.Add($"RandomEventManager deck has {manager.Deck.Count} events, expected {expected}.");
+            else if (manager.Deck.Any(e => e == null))
+                Problems.Add("RandomEventManager deck contains a null event.");
+            else
+                Debug.Log($"[Validate] Event deck: {expected} cards wired, " +
+                          $"{manager.ChancePerYear:P0} a year, guaranteed every {manager.GuaranteedEveryYears}.");
         }
 
         private static void RequireRefs<T>(List<GameObject> roots, params string[] fields) where T : Component

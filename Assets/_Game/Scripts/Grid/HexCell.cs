@@ -83,8 +83,7 @@ namespace Solarpunk.Grid
         public bool CanBuild(TileDefinition definition)
         {
             if (definition == null || builtTile != null) return false;
-            if (definition.requiredRelief == TerrainRelief.Mutable) return true;
-            return definition.requiredRelief == relief;
+            return definition.AllowedOn(relief);
         }
 
         private void ApplyColor(Color color)

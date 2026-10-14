@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: computing
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Computing
+  description: All research income +25%.
+  tradeoff: "Data centres: \u22123 energy a year. They use 1\u20132% of the world's
+    electricity."
+  cost: 200
+  prerequisites:
+  - {fileID: 11400000, guid: f49f40e341e4b8d46869469c5854a29b, type: 2}
+  requireAny: 0
+  position: {x: 3.5, y: -6.3}
+  branch: science
+  effects:
+  - kind: 6
+    target: 0
+    key: 
+    resource: 0
+    add: 0
+    multiply: 1.25
+    minCityLevel: 0
+    isTradeoff: 0
+    suppressedBy: []
+  - kind: 3
+    target: 0
+    key: 
+    resource: 0
+    add: -3
+    multiply: 1
+    minCityLevel: 0
+    isTradeoff: 1
+    suppressedBy: []
+  pendingNote: 

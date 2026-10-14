@@ -14,13 +14,13 @@ namespace Solarpunk.UI
         {
             var parts = new List<string>();
 
-            if (Mathf.Abs(v.energy) > 0.01f) parts.Add($"Energy {Signed(v.energy)}");
-            if (Mathf.Abs(v.sustainability) > 0.01f) parts.Add($"Sust {Signed(v.sustainability)}");
-            if (Mathf.Abs(v.money) > 0.01f) parts.Add($"Money {Signed(v.money)}");
-            if (Mathf.Abs(v.population) > 0.01f) parts.Add($"Pop {Signed(v.population)}");
-            if (Mathf.Abs(v.happiness) > 0.01f) parts.Add($"Happy {Signed(v.happiness)}");
+            if (Mathf.Abs(v.energy) > 0.01f) parts.Add(Loc.T("stat.energy", Signed(v.energy)));
+            if (Mathf.Abs(v.sustainability) > 0.01f) parts.Add(Loc.T("stat.sust", Signed(v.sustainability)));
+            if (Mathf.Abs(v.money) > 0.01f) parts.Add(Loc.T("stat.money", Signed(v.money)));
+            if (Mathf.Abs(v.population) > 0.01f) parts.Add(Loc.T("stat.pop", Signed(v.population)));
+            if (Mathf.Abs(v.happiness) > 0.01f) parts.Add(Loc.T("stat.happy", Signed(v.happiness)));
 
-            return parts.Count == 0 ? "No yearly effect" : string.Join("   ", parts);
+            return parts.Count == 0 ? Loc.T("stat.none") : string.Join("   ", parts);
         }
     }
 }

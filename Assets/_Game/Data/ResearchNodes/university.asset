@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: university
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: University
+  description: Every city at level 3+ earns +1 research a year on top of its level
+    income.
+  tradeoff: Each city at level 3+ pays 3 money a year to run its university.
+  cost: 40
+  prerequisites:
+  - {fileID: 11400000, guid: 23824e122b3d43d4eb8c4b361f9c8187, type: 2}
+  requireAny: 0
+  position: {x: -2, y: -1}
+  branch: city
+  effects:
+  - kind: 5
+    target: 0
+    key: 
+    resource: 0
+    add: 1
+    multiply: 1
+    minCityLevel: 3
+    isTradeoff: 0
+    suppressedBy: []
+  - kind: 0
+    target: 2
+    key: City
+    resource: 1
+    add: -3
+    multiply: 1
+    minCityLevel: 3
+    isTradeoff: 1
+    suppressedBy: []
+  pendingNote: 

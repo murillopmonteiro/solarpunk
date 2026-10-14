@@ -14,8 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Tiles.TileDefinition
   displayName: Nuclear
   category: 1
-  requiredRelief: 0
+  allowedRelief: 
   buildCost: 3000
+  clearCost: 0
+  playerBuildable: 1
   perTurnEffect:
     energy: 80
     money: -15
@@ -28,6 +30,9 @@ MonoBehaviour:
     sustainability: 0
     population: 0
     happiness: 0
-  requiresExtraction: 1
+  terrainBonuses: []
+  producedFuel: 0
+  requiredFuel: 0
+  tags: []
   placeholderColor: {r: 0.72, g: 0.55, b: 0.9, a: 1}
   structurePrefab: {fileID: 0}

@@ -14,8 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Tiles.TileDefinition
   displayName: Petroleo
   category: 1
-  requiredRelief: 0
+  allowedRelief: 
   buildCost: 900
+  clearCost: 0
+  playerBuildable: 1
   perTurnEffect:
     energy: 35
     money: -10
@@ -28,6 +30,10 @@ MonoBehaviour:
     sustainability: 0
     population: 0
     happiness: 0
-  requiresExtraction: 1
+  terrainBonuses: []
+  producedFuel: 0
+  requiredFuel: 0
+  tags:
+  - fossil
   placeholderColor: {r: 0.36, g: 0.26, b: 0.2, a: 1}
   structurePrefab: {fileID: 0}

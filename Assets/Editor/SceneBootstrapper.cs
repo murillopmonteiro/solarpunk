@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Solarpunk.Core;
+using Solarpunk.Events;
 using Solarpunk.Grid;
 using Solarpunk.Managers;
+using Solarpunk.Research;
 using Solarpunk.Tiles;
 using Solarpunk.UI;
 using UnityEditor;
@@ -20,19 +22,28 @@ namespace Solarpunk.EditorTools
     {
         private const string PrefabPath = "Assets/_Game/Prefabs/HexCell.prefab";
         private const string MaterialPath = "Assets/_Game/Materials/HexSurface.mat";
-        private const string GroundMaterialPath = "Assets/_Game/Materials/Ground.mat";
+        private const string GroundMaterialPath = "Assets/_Game/Materials/Ground.mat"; // superseded by the sea
+        private const string SeaMaterialPath = "Assets/_Game/Materials/Sea.mat";
         private const string ScenePath = "Assets/_Game/Scenes/Game.unity";
 
         [MenuItem("Solarpunk/Build Initial Scene")]
         public static void BuildInitialScene()
         {
             Mesh hexMesh = HexMeshFactory.GenerateAndSave();
+            SeaMeshFactory.GenerateAndSave();
             CreateHexPrefab(hexMesh);
 
-            // Must precede the tile assets: the city definition references this prefab.
+            // Must precede the tile assets: the city, forest and coal extraction
+            // definitions reference these.
             CityModelBuilder.BuildPrefab();
+            TreeModelBuilder.BuildPrefab();
+            CoalMineModelBuilder.BuildPrefab();
+            CoalPlantModelBuilder.BuildPrefab();
+            HydroModelBuilder.BuildPrefab();
 
             TileDataFactory.GenerateAll();
+            ResearchTreeFactory.GenerateAll();
+            EventDeckFactory.GenerateAll();
             BuildScene();
         }
 
@@ -83,19 +94,27 @@ namespace Solarpunk.EditorTools
             // beforehand into a destroyed "fake null" that silently serialises as
             // none — the palette came out empty for exactly this reason.
             GameObject hexPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
-            List<TileDefinition> palette = TileDataFactory.LoadAll();
+            List<TileDefinition> allTiles = TileDataFactory.LoadAll();
+            List<ResearchNode> researchNodes = ResearchTreeFactory.LoadAll();
+            List<EventDefinition> eventDeck = EventDeckFactory.LoadAll();
 
             if (hexPrefab == null) throw new System.InvalidOperationException($"Hex prefab missing at {PrefabPath}.");
-            if (palette.Count != TileDataFactory.OrderedNames.Length || palette.Any(p => p == null))
+            if (allTiles.Count != TileDataFactory.OrderedNames.Length || allTiles.Any(p => p == null))
                 throw new System.InvalidOperationException("Tile definitions failed to load — aborting scene build.");
+
+            // The forest is board-generated terrain, so it is wired to the grid and kept
+            // out of the build menu.
+            List<TileDefinition> palette = allTiles.FindAll(d => d.playerBuildable);
+            TileDefinition forest = allTiles.Find(d => d.category == TileCategory.Forest);
+            if (forest == null) throw new System.InvalidOperationException("No forest tile definition.");
 
             // --- Camera: angled perspective so the board reads as 3D ---
             var cameraGo = new GameObject("Main Camera");
             var camera = cameraGo.AddComponent<Camera>();
             cameraGo.AddComponent<AudioListener>();
             camera.clearFlags = CameraClearFlags.SolidColor;
-            // Sunny sky. Solarpunk is optimistic; the old slate grey read as bleak sci-fi.
-            camera.backgroundColor = new Color(0.53f, 0.79f, 0.87f);
+            // The sea fills the whole view; this dawn haze only shows if the camera ever lifts past it.
+            camera.backgroundColor = new Color(0.97f, 0.89f, 0.74f);
             camera.fieldOfView = 45f;
             // Centred in the corridor between the resource capsules on the left
             // and the inspector panel on the right.
@@ -115,19 +134,25 @@ namespace Solarpunk.EditorTools
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.34f, 0.39f, 0.42f);
 
-            // --- Ground slab under the island ---
-            Material groundMaterial = CreateMaterial(GroundMaterialPath, new Color(0.13f, 0.26f, 0.30f), 0.05f);
-            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            ground.name = "Ground";
-            ground.transform.position = new Vector3(0f, -0.36f, 0f);
-            ground.transform.localScale = Vector3.one * 3f;
-            ground.GetComponent<Renderer>().sharedMaterial = groundMaterial;
+            // --- Faceted sea under the island ---
+            // Unlit: its shading is baked per triangle, and the lagoon-to-haze gradient
+            // stands in for the sky. Just under the hexes so their sides read as slabs.
+            AssetDatabase.DeleteAsset(GroundMaterialPath);
+            var seaMaterial = new Material(Shader.Find("Solarpunk/VertexColorUnlit"));
+            AssetDatabase.DeleteAsset(SeaMaterialPath);
+            AssetDatabase.CreateAsset(seaMaterial, SeaMaterialPath);
+
+            var sea = new GameObject("Sea");
+            sea.transform.position = new Vector3(0f, -0.36f, 0f);
+            sea.AddComponent<MeshFilter>().sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(SeaMeshFactory.MeshPath);
+            sea.AddComponent<MeshRenderer>().sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(SeaMaterialPath);
 
             // --- Board ---
             var gridGo = new GameObject("HexGrid");
             var gridManager = gridGo.AddComponent<HexGridManager>();
             var gridSo = new SerializedObject(gridManager);
             gridSo.FindProperty("hexCellPrefab").objectReferenceValue = hexPrefab.GetComponent<HexCell>();
+            gridSo.FindProperty("forestDefinition").objectReferenceValue = forest;
             gridSo.FindProperty("hexSize").floatValue = 1f;
             gridSo.FindProperty("spacing").floatValue = 1.04f;
             gridSo.ApplyModifiedPropertiesWithoutUndo();
@@ -146,16 +171,58 @@ namespace Solarpunk.EditorTools
                 new ResourceVector { energy = -8f, money = -2f, sustainability = -1f, population = 5f, happiness = 0f });
             citySo.ApplyModifiedPropertiesWithoutUndo();
 
+            // Research sits outside the 5-resource vector, so it gets its own manager.
+            var researchManager = AddChild<ResearchManager>(managersRoot, "ResearchManager");
+            var researchSo = new SerializedObject(researchManager);
+            researchSo.FindProperty("pointsPerCityLevel").floatValue = 1f;
+            SerializedProperty treeProp = researchSo.FindProperty("tree");
+            treeProp.ClearArray();
+            for (int i = 0; i < researchNodes.Count; i++)
+            {
+                treeProp.InsertArrayElementAtIndex(i);
+                treeProp.GetArrayElementAtIndex(i).objectReferenceValue = researchNodes[i];
+            }
+            researchSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // The city level cap comes from research: 2 before any, then 3, 5, 7, 10 along the city line.
+            var citySoResearch = new SerializedObject(cityGrowth);
+            citySoResearch.FindProperty("researchManager").objectReferenceValue = researchManager;
+            citySoResearch.FindProperty("baseLevelCap").intValue = 2;
+            citySoResearch.ApplyModifiedPropertiesWithoutUndo();
+
+            // One ordinary year in twenty draws a card; every 5th year is certain.
+            // A drawn card waits on the HUD for an answer; the year does not turn until it is given.
+            var randomEvents = AddChild<RandomEventManager>(managersRoot, "RandomEventManager");
+            var eventsSo = new SerializedObject(randomEvents);
+            eventsSo.FindProperty("resourceManager").objectReferenceValue = resourceManager;
+            eventsSo.FindProperty("gridManager").objectReferenceValue = gridManager;
+            eventsSo.FindProperty("chancePerYear").floatValue = 0.05f;
+            eventsSo.FindProperty("guaranteedEveryYears").intValue = 5;
+            eventsSo.FindProperty("seed").intValue = 0;
+            SerializedProperty deckProp = eventsSo.FindProperty("deck");
+            deckProp.ClearArray();
+            for (int i = 0; i < eventDeck.Count; i++)
+            {
+                deckProp.InsertArrayElementAtIndex(i);
+                deckProp.GetArrayElementAtIndex(i).objectReferenceValue = eventDeck[i];
+            }
+            eventsSo.ApplyModifiedPropertiesWithoutUndo();
+
             var turnManager = AddChild<TurnManager>(managersRoot, "TurnManager");
             var turnSo = new SerializedObject(turnManager);
             turnSo.FindProperty("gridManager").objectReferenceValue = gridManager;
             turnSo.FindProperty("resourceManager").objectReferenceValue = resourceManager;
             turnSo.FindProperty("cityGrowth").objectReferenceValue = cityGrowth;
+            turnSo.FindProperty("researchManager").objectReferenceValue = researchManager;
+            turnSo.FindProperty("randomEvents").objectReferenceValue = randomEvents;
             turnSo.ApplyModifiedPropertiesWithoutUndo();
 
             var buildController = AddChild<BuildController>(managersRoot, "BuildController");
             var buildSo = new SerializedObject(buildController);
+            buildSo.FindProperty("gridManager").objectReferenceValue = gridManager;
             buildSo.FindProperty("resourceManager").objectReferenceValue = resourceManager;
+            buildSo.FindProperty("cityGrowth").objectReferenceValue = cityGrowth;
+            buildSo.FindProperty("researchManager").objectReferenceValue = researchManager;
             SerializedProperty paletteProp = buildSo.FindProperty("palette");
             paletteProp.ClearArray();
             for (int i = 0; i < palette.Count; i++)
@@ -184,6 +251,8 @@ namespace Solarpunk.EditorTools
             hudSo.FindProperty("selectionController").objectReferenceValue = selectionController;
             hudSo.FindProperty("buildController").objectReferenceValue = buildController;
             hudSo.FindProperty("cityGrowth").objectReferenceValue = cityGrowth;
+            hudSo.FindProperty("researchManager").objectReferenceValue = researchManager;
+            hudSo.FindProperty("randomEvents").objectReferenceValue = randomEvents;
             hudSo.ApplyModifiedPropertiesWithoutUndo();
 
             // Dev-only capture rig; inert unless the player is run with -autoshot.
@@ -193,6 +262,8 @@ namespace Solarpunk.EditorTools
             shotSo.FindProperty("selectionController").objectReferenceValue = selectionController;
             shotSo.FindProperty("buildController").objectReferenceValue = buildController;
             shotSo.FindProperty("turnManager").objectReferenceValue = turnManager;
+            shotSo.FindProperty("researchManager").objectReferenceValue = researchManager;
+            shotSo.FindProperty("randomEvents").objectReferenceValue = randomEvents;
             shotSo.ApplyModifiedPropertiesWithoutUndo();
 
             System.IO.Directory.CreateDirectory("Assets/_Game/Scenes");

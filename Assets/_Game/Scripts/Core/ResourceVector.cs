@@ -41,6 +41,22 @@ namespace Solarpunk.Core
             };
         }
 
+        /// <summary>A copy with one component replaced. The struct itself stays immutable in use.</summary>
+        public ResourceVector With(ResourceType type, float value)
+        {
+            ResourceVector copy = this;
+            switch (type)
+            {
+                case ResourceType.Energy: copy.energy = value; break;
+                case ResourceType.Money: copy.money = value; break;
+                case ResourceType.Sustainability: copy.sustainability = value; break;
+                case ResourceType.Population: copy.population = value; break;
+                case ResourceType.Happiness: copy.happiness = value; break;
+                default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+            return copy;
+        }
+
         public float Get(ResourceType type)
         {
             switch (type)

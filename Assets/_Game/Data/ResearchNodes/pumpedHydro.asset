@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: pumpedHydro
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Pumped Hydro
+  description: Each Hydroelectric plant adds +100 to the stored energy cap.
+  tradeoff: 
+  cost: 90
+  prerequisites:
+  - {fileID: 11400000, guid: 26eabcfa8ec267c48bf0c0ba0a4922b9, type: 2}
+  - {fileID: 11400000, guid: 28a0f958f8de1504e85e7fdc4aecc485, type: 2}
+  requireAny: 0
+  position: {x: 1, y: -2}
+  branch: energy
+  effects: []
+  pendingNote: Needs an energy storage cap, which the game doesn't have yet.

@@ -14,8 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Tiles.TileDefinition
   displayName: Eolica
   category: 1
-  requiredRelief: 0
+  allowedRelief: 
   buildCost: 400
+  clearCost: 0
+  playerBuildable: 1
   perTurnEffect:
     energy: 18
     money: -3
@@ -28,6 +30,14 @@ MonoBehaviour:
     sustainability: 0
     population: 0
     happiness: 0
-  requiresExtraction: 0
+  terrainBonuses:
+  - relief: 2
+    resource: 0
+    outputMultiplier: 1.2
+    costMultiplier: 1.2
+  producedFuel: 0
+  requiredFuel: 0
+  tags:
+  - renewable
   placeholderColor: {r: 0.85, g: 0.93, b: 0.96, a: 1}
   structurePrefab: {fileID: 0}

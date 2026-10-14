@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: massProd
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Mass Production
+  description: "Power plant build costs a further \u221215%."
+  tradeoff: "Embodied carbon: every new building costs 5 sustainability once. Cement
+    alone makes about 8% of the world's CO\u2082."
+  cost: 70
+  prerequisites:
+  - {fileID: 11400000, guid: 863771787d213094a833cc7b13169be0, type: 2}
+  requireAny: 0
+  position: {x: -1.5, y: 3.3}
+  branch: industry
+  effects:
+  - kind: 1
+    target: 2
+    key: PowerPlant
+    resource: 0
+    add: 0
+    multiply: 0.85
+    minCityLevel: 0
+    isTradeoff: 0
+    suppressedBy: []
+  - kind: 2
+    target: 0
+    key: 
+    resource: 2
+    add: -5
+    multiply: 1
+    minCityLevel: 0
+    isTradeoff: 1
+    suppressedBy: []
+  pendingNote: 

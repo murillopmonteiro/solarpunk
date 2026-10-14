@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: tandemSolar
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Tandem Solar Cells
+  description: "Solar energy 10 \u2192 15. Pairs with your \"start crappy and evolve\":
+    Solar opens at 6, Better Solar takes it to 10, this to 15."
+  tradeoff: 
+  cost: 300
+  prerequisites:
+  - {fileID: 11400000, guid: 3f49a90ee82d69944abc729602d2f87a, type: 2}
+  requireAny: 0
+  position: {x: 3.5, y: -9.8}
+  branch: science
+  effects: []
+  pendingNote: Waits on Solar starting weaker, as the tree suggests.

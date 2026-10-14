@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f943df4b63011e4ebe0c85170b943aa, type: 3}
+  m_Name: gasDisc
+  m_EditorClassIdentifier: Assembly-CSharp::Solarpunk.Research.ResearchNode
+  displayName: Natural Gas Discovery
+  description: "Unlocks Gas Extraction and a Gas plant: E +30, S \u22122, M \u22126,
+    $700."
+  tradeoff: "Methane leaks: each Gas Extraction costs 1 more sustainability a year.
+    Over 20 years methane traps about 80 times more heat than CO\u2082."
+  cost: 120
+  prerequisites:
+  - {fileID: 11400000, guid: 2a5f681edf5e57647b6b470a19d69d3a, type: 2}
+  requireAny: 0
+  position: {x: 3, y: 1}
+  branch: energy
+  effects: []
+  pendingNote: Needs Gas Extraction and Gas plant tiles.
