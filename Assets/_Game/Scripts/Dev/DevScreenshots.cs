@@ -184,6 +184,19 @@ namespace Solarpunk.Dev
             selectionController.Select(null);
             yield return Capture(outputDir, "14-after-25-years");
 
+            // Below 500 sustainability the scene sours: halfway at 250, full murk at 0.
+            // Waits out the fade so the capture shows where the look settles.
+            var stats = FindFirstObjectByType<ResourceManager>();
+            float sustainability = stats.Current.sustainability;
+            stats.SetStat(ResourceType.Sustainability, 250f);
+            yield return new WaitForSecondsRealtime(2.5f);
+            yield return Capture(outputDir, "14b-sustainability-250");
+            stats.SetStat(ResourceType.Sustainability, 0f);
+            yield return new WaitForSecondsRealtime(2.5f);
+            yield return Capture(outputDir, "14c-sustainability-0");
+            stats.SetStat(ResourceType.Sustainability, sustainability);
+            yield return new WaitForSecondsRealtime(2.5f);
+
             // Admin mode, opened as F1 would, with its money button pressed for real.
             // The harness runs in development builds, where the panel exists; say so if it doesn't.
             Solarpunk.UI.AdminPanel admin = FindFirstObjectByType<Solarpunk.UI.AdminPanel>();

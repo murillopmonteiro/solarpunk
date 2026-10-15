@@ -219,8 +219,16 @@ Engineering) puts a coast hex on sale in the build panel when nothing is
 selected, $600 then ×1.5 each.
 
 The build panel lists only what the selected hex's terrain allows and research
-has unlocked, and scales itself down past ~10 rows to stay clear of the
-bottom-right buttons.
+has unlocked, in a fixed-height list that scrolls (wheel or drag) past ~5 rows.
+
+`Grid/CameraFramer` (installs itself on the camera at scene load) keeps the camera's
+fixed angle and moves it so every hex fits the screen area the HUD leaves free,
+reframing with a glide when the island grows or the window resizes. The camera
+position in `SceneBootstrapper` is only where it starts.
+
+Below 500 sustainability, `UI/SustainabilityMood` (installs itself on the camera at scene load) fades the sea, sky
+and key light toward a polluted murk, fully there at 0. The sea gets it through the
+`_Gloom` global in `VertexColorUnlit`.
 
 ---
 
@@ -268,7 +276,11 @@ was a real bug: `GetEffectForLevel` multiplied by level, so auto-growth pushed
 the city to level 8 by year 9 and runs ended on happiness with 92% of
 sustainability unspent. If anything reintroduces scaling, `BalanceTests` fails.
 
-Defeat when sustainability or happiness hits 0. Victory at turn 300.
+Defeat when population hits 0. Victory at turn 300. Sustainability and happiness
+reach population through `Core/IntertwinedStats` (Murillo's rules: debt, S < 100,
+H < 25 and < 10 bend population growth; an energy deficit from year 50 costs
+happiness), applied in `CalculateTurnDelta`. `Core/WinStats.Score` is the end-of-run
+score, not yet on any screen.
 
 **Money can go negative: that is debt, with no limit and no interest** (Murillo's
 call). Nothing checks the balance before spending — `ResourceManager.Spend` never

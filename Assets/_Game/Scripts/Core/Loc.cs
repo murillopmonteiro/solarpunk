@@ -98,8 +98,8 @@ namespace Solarpunk.Core
                 "Clique num hexágono para construir.\nEspaço também avança um ano."),
             ["hud.playAgain"] = ("PLAY AGAIN", "JOGAR DE NOVO"),
             ["hud.victory"] = ("VICTORY\n\nYou reached year {0}.", "VITÓRIA\n\nVocê chegou ao ano {0}."),
-            ["hud.collapse"] = ("COLLAPSE\n\nSustainability or happiness hit zero.",
-                "COLAPSO\n\nSustentabilidade ou felicidade chegou a zero."),
+            ["hud.collapse"] = ("COLLAPSE\n\nThe population is gone.",
+                "COLAPSO\n\nA população chegou a zero."),
             // Names the language the button switches *to*, in that language.
             ["hud.switchLanguage"] = ("PORTUGUÊS", "ENGLISH"),
 

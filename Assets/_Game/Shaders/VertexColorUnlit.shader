@@ -37,7 +37,17 @@ Shader "Solarpunk/VertexColorUnlit"
                 return o;
             }
 
-            fixed4 frag(v2f i) : SV_Target { return i.color; }
+            // Set globally by SustainabilityMood: 0 is the clean lagoon, 1 a polluted murk.
+            float _Gloom;
+            fixed4 _GloomColor;
+
+            fixed4 frag(v2f i) : SV_Target
+            {
+                // Keep the facets readable: the murk takes its brightness from the original colour.
+                float luma = dot(i.color.rgb, float3(0.299, 0.587, 0.114));
+                fixed3 murk = _GloomColor.rgb * (0.5 + luma);
+                return fixed4(lerp(i.color.rgb, murk, _Gloom), i.color.a);
+            }
             ENDCG
         }
     }

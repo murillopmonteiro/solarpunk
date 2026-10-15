@@ -37,7 +37,7 @@ namespace Solarpunk.Managers
         /// <summary>The most energy the stock holds. Above it energy is lost, or sold by Energy Exports.</summary>
         public float EnergyCap => EnergyCapSource?.Invoke() ?? float.PositiveInfinity;
 
-        /// <summary>Admin mode: sustainability or happiness at zero no longer ends the run.</summary>
+        /// <summary>Admin mode: population at zero no longer ends the run.</summary>
         public bool Invincible { get; set; }
 
         public event Action<ResourceVector> OnResourcesChanged;
@@ -140,7 +140,7 @@ namespace Solarpunk.Managers
             Current = next;
             OnResourcesChanged?.Invoke(Current);
 
-            if (!Invincible && (Current.sustainability <= 0f || Current.happiness <= 0f))
+            if (!Invincible && Current.population <= 0f)
             {
                 GameOver = true;
                 OnGameEnded?.Invoke(false);

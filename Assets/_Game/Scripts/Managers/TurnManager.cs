@@ -97,6 +97,9 @@ namespace Solarpunk.Managers
                     delta += TileEconomy.PerTurn(pair.Value, cityGrowth, researchManager);
             }
 
+            // Before exports, which take the sold surplus out of energy and would read as a deficit.
+            delta = IntertwinedStats.Apply(resourceManager.Current, delta, CurrentTurn + 1);
+
             // Energy Exports: whatever the year would push above the storage cap is sold.
             if (researchManager != null)
                 delta += researchManager.Export(resourceManager.Current.energy + delta.energy - EnergyCap());

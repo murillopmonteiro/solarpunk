@@ -20,7 +20,7 @@ namespace Solarpunk.Managers
         {
             Debug.Log(victory
                 ? $"Victory — survived to turn {TurnManager.VictoryTurn}."
-                : "Defeat — sustainability or happiness hit 0.");
+                : "Defeat — population hit 0.");
         }
 
         private void OnDestroy()
