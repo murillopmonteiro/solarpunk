@@ -77,9 +77,11 @@ namespace Solarpunk.UI
             return new Section { Value = value, Delta = delta, Tag = tag.GetComponent<Image>() };
         }
 
-        public void SetResources(ResourceVector current, ResourceVector perTurn)
+        public void SetResources(ResourceVector current, ResourceVector perTurn, float energyCap)
         {
             Apply(_energy, current.energy, perTurn.energy, "");
+            // The cap rides small after the stock, "42/54", so three digits of each still fit.
+            if (_energy.Value != null) _energy.Value.text += $"<size=22>/{energyCap:0}</size>";
             Apply(_money, current.money, perTurn.money, "$");
             Apply(_sustainability, current.sustainability, perTurn.sustainability, "");
             Apply(_population, current.population, perTurn.population, "");

@@ -275,10 +275,16 @@ call). Nothing checks the balance before spending — `ResourceManager.Spend` ne
 refuses. The one balance gate left is a design rule, the territory offer card's
 "only appears with $200".
 
-**Energy Exports** sells the whole yearly energy surplus at $1 a unit (−0.5
+**Energy storage is capped** (Murillo's formula): `cap = Σ |tile energy/yr| × years`,
+3 years at base, floor 20 (`TurnManager.EnergyCap`). Gross flow, not net, so a
+balanced grid still gets a buffer: the triad is (8 + 10) × 3 = 54. Energy Storage
+raises the years to 9, Better Storage to 30 (the tree's 50 → 150 → 500), and Pumped
+Hydro gives each hydro plant 2.5 more (+100 on its +40). Above the cap, energy is lost
+at the end of the year. The HUD shows `stock/cap`.
+
+**Energy Exports** sells what a year would push above the cap at $1 a unit (−0.5
 happiness in an exporting year), applied in `TurnManager.CalculateTurnDelta`, so
-the HUD preview shows it. The tree's text says "above the storage cap"; there is
-no cap yet, so the surplus is everything above consumption.
+the HUD preview shows it.
 
 Event cards: 5% chance in an ordinary year, plus a guaranteed card every 5th year.
 
@@ -358,7 +364,7 @@ level 1 city, coal extraction pithead, coal thermal and hydroelectric models,
 full HUD, unlimited cities,
 coal plants gated on coal extraction, forests seeded on open ground and felled
 for a fee, per-relief build rules with terrain bonuses, the 80-node research tree from
-the artifact with 56 nodes wired to real effects (pannable, zoomable overlay;
+the artifact with 59 nodes wired to real effects (pannable, zoomable overlay;
 plants locked behind research; city level capped by research), English and PT-BR text
 with an in-game toggle, 18 yearly event cards on a full-screen card that blocks the
 year until answered (choices, war window, territory purchase/conquest growing the
@@ -404,7 +410,7 @@ assembly boundaries and no test suite on `master`.
 
 - **19 research nodes, plus parts of 5 more** — in the tree, marked "not active
   yet" with the reason (the 5 science gates do nothing by design). They wait on
-  systems that do not exist: an energy storage cap, per-tile risk rolls (nuclear
+  systems that do not exist: Energy Storage's 20% round-trip loss, per-tile risk rolls (nuclear
   accidents, geothermal quakes, spills), wind/solar intermittency, research that
   changes where a tile may be built (Offshore Wind), fuel-free hydrogen plants. Node effect and tradeoff text is English only; names are
   translated.

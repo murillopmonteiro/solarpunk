@@ -217,8 +217,19 @@ namespace Solarpunk.Research
             return total;
         }
 
+        /// <summary>Years added to this tile's share of the energy storage cap.</summary>
+        public float StorageYears(TileFacts tile)
+        {
+            float years = 0f;
+            foreach (ResearchEffect effect in ActiveEffects())
+            {
+                if (effect.kind == EffectKind.StorageYears && effect.Matches(tile)) years += effect.add;
+            }
+            return years;
+        }
+
         /// <summary>
-        /// What exporting a year's energy surplus does: the surplus leaves the energy
+        /// What exporting the energy above the storage cap does: the surplus leaves the energy
         /// stock, money comes in at the export price, and the export tradeoffs land.
         /// Zero when no export research is owned or there is no surplus to sell.
         /// </summary>

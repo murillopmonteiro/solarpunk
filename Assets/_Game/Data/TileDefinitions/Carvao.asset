@@ -38,4 +38,4 @@ MonoBehaviour:
   tags:
   - fossil
   placeholderColor: {r: 0.26, g: 0.26, b: 0.28, a: 1}
-  structurePrefab: {fileID: 5246573746859205463, guid: 6a32a347dc0d8364498923a0cb0591d2, type: 3}
+  structurePrefab: {fileID: 347669098353433654, guid: 6a32a347dc0d8364498923a0cb0591d2, type: 3}

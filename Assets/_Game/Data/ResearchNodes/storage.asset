@@ -22,5 +22,15 @@ MonoBehaviour:
   requireAny: 0
   position: {x: 1, y: 0}
   branch: energy
-  effects: []
-  pendingNote: Needs an energy storage cap, which the game doesn't have yet.
+  effects:
+  - kind: 16
+    target: 0
+    key: 
+    resource: 0
+    add: 6
+    multiply: 1
+    minCityLevel: 0
+    nextTo: 
+    isTradeoff: 0
+    suppressedBy: []
+  pendingNote: The 20% loss on stored energy is not modelled yet.

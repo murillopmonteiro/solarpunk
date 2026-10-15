@@ -40,7 +40,7 @@ namespace Solarpunk.Research
         ClearCost,
 
         /// <summary>
-        /// The year's energy surplus is sold instead of stored. On Money, <c>add</c> is the
+        /// Energy above the storage cap is sold instead of lost. On Money, <c>add</c> is the
         /// price per unit sold; on any other resource, <c>add</c> lands once in a year that exports.
         /// </summary>
         EnergyExport,
@@ -55,7 +55,10 @@ namespace Solarpunk.Research
         SpreadForest,
 
         /// <summary>Coast hexes can be bought on the shore, the first at <c>add</c>, each next one dearer.</summary>
-        BuyTerritory
+        BuyTerritory,
+
+        /// <summary>A matched tile's yearly energy counts <c>add</c> more years toward the storage cap.</summary>
+        StorageYears
     }
 
     /// <summary>Which tiles an effect applies to.</summary>

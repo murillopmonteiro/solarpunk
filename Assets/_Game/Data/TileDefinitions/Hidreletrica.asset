@@ -38,4 +38,4 @@ MonoBehaviour:
   tags:
   - renewable
   placeholderColor: {r: 0.35, g: 0.62, b: 0.92, a: 1}
-  structurePrefab: {fileID: 1731089744133145476, guid: b50e3c451538d1a47870364effcf293f, type: 3}
+  structurePrefab: {fileID: 4438204956139285393, guid: b50e3c451538d1a47870364effcf293f, type: 3}

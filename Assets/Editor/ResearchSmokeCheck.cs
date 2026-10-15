@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Solarpunk.Core;
 using Solarpunk.Grid;
+using Solarpunk.Managers;
 using Solarpunk.Research;
 using Solarpunk.Tiles;
 using UnityEditor;
@@ -60,8 +61,11 @@ namespace Solarpunk.EditorTools
                 var cities = new List<int> { 3, 3 };
                 Near("research income, two level-3 cities, no research", research.PointsPerTurn(cities), 6f);
 
+                Near("no storage years before research", research.StorageYears(CityFacts(1)), 0f);
+
                 // Coal Power also needs Thermodynamics, which needs Research.
                 Unlock(research, byId, "research", "thermo", "storage", "coalPow");
+                Near("Energy Storage: 3 -> 9 years of energy held", research.StorageYears(CityFacts(1)), 6f);
                 TileFacts coal = TileEconomy.Facts(tiles["Carvao"]);
                 ResourceVector coalOut = research.ModifyOutput(tiles["Carvao"].perTurnEffect, coal);
                 Near("Coal Power: coal plant energy 10 -> 12", coalOut.energy, 12f);
@@ -97,6 +101,20 @@ namespace Solarpunk.EditorTools
                 Near("Energy Exports tradeoff: -0.5 happiness", sold.happiness, -0.5f);
                 Near("...nothing sold in a deficit year", research.Export(-4f).happiness, 0f);
 
+                Unlock(research, byId, "betterStor");
+                Near("Better Storage: 9 -> 30 years", research.StorageYears(CityFacts(1)), 27f);
+                UnlockDeep(research, byId, "pumpedHydro");
+                Near("Pumped Hydro: hydro holds 2.5 years more",
+                    research.StorageYears(TileEconomy.Facts(tiles["Hidreletrica"])), 29.5f);
+
+                // The cap itself: the overflow of a year is lost.
+                ResourceManager stock = go.AddComponent<ResourceManager>();
+                stock.EnergyCapSource = () => 50f;
+                stock.SetStat(ResourceType.Sustainability, 1000f);
+                stock.SetStat(ResourceType.Happiness, 100f);
+                stock.ApplyTurn(new ResourceVector { energy = 80f });
+                Near("energy above the cap is lost", stock.Current.energy, 50f);
+
                 Unlock(research, byId, "biomass");
                 Check("Biomass unlocks Biomassa", !research.IsTileLocked("Biomassa"));
 
@@ -106,7 +124,8 @@ namespace Solarpunk.EditorTools
                     research.ModifyOutput(mine.perTurnEffect, TileEconomy.Facts(mine)), TerrainRelief.Mountain);
                 Near("Mechanized Mining on a mountain: (20 + 6) x 1.2", mineOut.money, 31.2f);
                 Near("Industrial Revolution: build cost x0.9", research.BuildCostMultiplier(coal), 0.9f);
-                Near("Industrial Revolution tradeoff: -1 sustainability a year", research.PerYear().sustainability, -1f);
+                // Better Storage's lithium, unlocked above, is the other -1.
+                Near("Industrial Revolution tradeoff: -1 sustainability a year", research.PerYear().sustainability, -2f);
 
                 Unlock(research, byId, "massProd");
                 Near("Mass Production: plant cost x0.9 x0.85", research.BuildCostMultiplier(coal), 0.765f);

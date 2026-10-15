@@ -107,7 +107,12 @@ namespace Solarpunk.EditorTools
             ["superconductors"] = new[] { Out("cat:PowerPlant", E, mul: 1.05f), Trade(Out("cat:PowerPlant", M, -2)) },
 
             // Energy & fossil
-            // No storage cap exists, so the whole yearly surplus sells at $1, not just what overflows a cap.
+            // Storage cap = every tile's |energy| a year x years held, 3 at base (TurnManager.EnergyCap).
+            // The tree's 50 -> 150 -> 500 is a triad's 18 x 3 -> x 9 -> x 30.
+            ["storage"] = new[] { Store("all", 6f) },
+            ["betterStor"] = new[] { Store("all", 21f), Trade(Year(S, -1)) },
+            // "+100 per hydro": 2.5 more years of a hydro plant's +40.
+            ["pumpedHydro"] = new[] { Store("Hidreletrica", 2.5f) },
             ["exports"] = new[] { Export(M, 1f), Trade(Export(H, -0.5f)) },
             ["hydroPow"] = new[] { Out("Hidreletrica", E, +8), Trade(Out("Hidreletrica", S, -1)) },
             ["coalPow"] = new[] { Out("Carvao", E, +2), Trade(Out("Carvao", H, -0.5f)) },
@@ -159,7 +164,6 @@ namespace Solarpunk.EditorTools
         /// <summary>Gates: nodes whose whole job is to open others. No effect, and nothing pending.</summary>
         private static readonly HashSet<string> Gates = new() { "center", "thermo", "electromag", "atomic", "semis" };
 
-        private const string NeedsStorage = "Needs an energy storage cap, which the game doesn't have yet.";
         private const string NeedsRisk = "Needs per-tile risk rolls (accidents, quakes, spills), not built yet.";
         private const string NoNumbers = "Its effect has no numbers yet.";
 
@@ -180,9 +184,7 @@ namespace Solarpunk.EditorTools
             ["tandemSolar"] = "Waits on Solar starting weaker, as the tree suggests.",
             ["forecast"] = "Needs wind and solar output to vary year to year, not modelled yet.",
             ["smartGrid"] = "The wind and solar swings it removes are not modelled yet.",
-            ["storage"] = NeedsStorage,
-            ["betterStor"] = NeedsStorage,
-            ["pumpedHydro"] = NeedsStorage,
+            ["storage"] = "The 20% loss on stored energy is not modelled yet.",
             ["safeOil"] = "The deck has no oil-spill event yet, so that half has nothing to stop.",
             ["greenH2"] = "Needs Gas and Oil plants that can drop their fuel.",
             ["justTrans"] = "Needs demolition to charge or pay by tile type.",
@@ -391,6 +393,13 @@ namespace Solarpunk.EditorTools
         {
             ResearchEffect effect = Make(EffectKind.UnlockTile, tile);
             effect.key = tile;
+            return effect;
+        }
+
+        private static ResearchEffect Store(string target, float years)
+        {
+            ResearchEffect effect = Make(EffectKind.StorageYears, target);
+            effect.add = years;
             return effect;
         }
 

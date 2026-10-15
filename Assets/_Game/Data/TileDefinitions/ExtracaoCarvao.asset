@@ -42,4 +42,4 @@ MonoBehaviour:
   tags:
   - fossil-extraction
   placeholderColor: {r: 0.85, g: 0.5, b: 0.22, a: 1}
-  structurePrefab: {fileID: 2836435345037627505, guid: 5fed0f17264b86a429403afbbf8f370c, type: 3}
+  structurePrefab: {fileID: 8128129967114459110, guid: 5fed0f17264b86a429403afbbf8f370c, type: 3}

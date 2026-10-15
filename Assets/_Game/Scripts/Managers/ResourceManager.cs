@@ -28,6 +28,15 @@ namespace Solarpunk.Managers
         public ResourceVector Current { get; private set; }
         public bool GameOver { get; private set; }
 
+        /// <summary>
+        /// Where the energy ceiling comes from: TurnManager, which can see the board.
+        /// Unset (an edit-mode caller) means no ceiling.
+        /// </summary>
+        public Func<float> EnergyCapSource { get; set; }
+
+        /// <summary>The most energy the stock holds. Above it energy is lost, or sold by Energy Exports.</summary>
+        public float EnergyCap => EnergyCapSource?.Invoke() ?? float.PositiveInfinity;
+
         /// <summary>Admin mode: sustainability or happiness at zero no longer ends the run.</summary>
         public bool Invincible { get; set; }
 
@@ -80,7 +89,7 @@ namespace Solarpunk.Managers
             next.sustainability = Mathf.Clamp(next.sustainability, 0f, SustainabilityMax);
             next.happiness = Mathf.Clamp(next.happiness, 0f, HappinessMax);
             next.population = Mathf.Max(0f, next.population);
-            next.energy = Mathf.Max(0f, next.energy);
+            next.energy = Mathf.Clamp(next.energy, 0f, EnergyCap);
 
             Current = next;
             OnResourcesChanged?.Invoke(Current);
@@ -88,8 +97,8 @@ namespace Solarpunk.Managers
 
         /// <summary>
         /// Admin mode: puts one stat at an exact number. Held to the same ranges a
-        /// year enforces (sustainability 0-1000, happiness 0-100, population and
-        /// energy not below 0; money is free, debt included), or the next turn would
+        /// year enforces (sustainability 0-1000, happiness 0-100, energy 0 to the storage
+        /// cap, population not below 0; money is free, debt included), or the next turn would
         /// snap it back. No defeat check: nothing here is a year passing.
         /// </summary>
         public void SetStat(ResourceType type, float value)
@@ -98,6 +107,7 @@ namespace Solarpunk.Managers
             {
                 ResourceType.Sustainability => Mathf.Clamp(value, 0f, SustainabilityMax),
                 ResourceType.Happiness => Mathf.Clamp(value, 0f, HappinessMax),
+                ResourceType.Energy => Mathf.Clamp(value, 0f, EnergyCap),
                 ResourceType.Money => value,
                 _ => Mathf.Max(0f, value)
             };
@@ -119,6 +129,9 @@ namespace Solarpunk.Managers
                 next.happiness -= Mathf.Abs(next.energy) * 0.5f;
                 next.energy = 0f;
             }
+
+            // Storage is full: the overflow is lost. Energy Exports already sold it, in the delta.
+            next.energy = Mathf.Min(next.energy, EnergyCap);
 
             next.sustainability = Mathf.Clamp(next.sustainability, 0f, SustainabilityMax);
             next.happiness = Mathf.Clamp(next.happiness, 0f, HappinessMax);

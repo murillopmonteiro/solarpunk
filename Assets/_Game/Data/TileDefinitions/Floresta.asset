@@ -37,4 +37,4 @@ MonoBehaviour:
   requiredFuel: 0
   tags: []
   placeholderColor: {r: 0.15, g: 0.37, b: 0.2, a: 1}
-  structurePrefab: {fileID: 4110013277744613740, guid: ff11800991a90cf49b55f3e7d9fe5a9b, type: 3}
+  structurePrefab: {fileID: 226265288028842452, guid: ff11800991a90cf49b55f3e7d9fe5a9b, type: 3}

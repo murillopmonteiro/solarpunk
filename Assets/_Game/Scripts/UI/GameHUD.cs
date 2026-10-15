@@ -306,7 +306,7 @@ namespace Solarpunk.UI
         private void Refresh()
         {
             ResourceVector perTurn = turnManager.CalculateTurnDelta();
-            _resources.SetResources(resourceManager.Current, perTurn);
+            _resources.SetResources(resourceManager.Current, perTurn, turnManager.EnergyCap());
             _yearLabel.text = turnManager.CurrentTurn.ToString();
 
             // One ray lit from year 0, all twelve at the victory year.

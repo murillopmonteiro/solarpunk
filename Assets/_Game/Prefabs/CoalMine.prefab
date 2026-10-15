@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2836435345037627505
+--- !u!1 &8128129967114459110
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3600363258827529241}
-  - component: {fileID: 4543316983280554545}
-  - component: {fileID: 246344814389464493}
+  - component: {fileID: 2892095685255598157}
+  - component: {fileID: 9195202130347228204}
+  - component: {fileID: 3968748683917043377}
   m_Layer: 0
   m_Name: CoalMine
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3600363258827529241
+--- !u!4 &2892095685255598157
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2836435345037627505}
+  m_GameObject: {fileID: 8128129967114459110}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.99904823, z: 0, w: 0.043619454}
   m_LocalPosition: {x: -0, y: 0, z: 0}
@@ -33,21 +33,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &4543316983280554545
+--- !u!33 &9195202130347228204
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2836435345037627505}
+  m_GameObject: {fileID: 8128129967114459110}
   m_Mesh: {fileID: 3603587025527718098, guid: 6be6ceaeaebb7654b9757747dedf4865, type: 3}
---- !u!23 &246344814389464493
+--- !u!23 &3968748683917043377
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2836435345037627505}
+  m_GameObject: {fileID: 8128129967114459110}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

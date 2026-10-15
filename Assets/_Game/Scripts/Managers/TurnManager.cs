@@ -18,6 +18,12 @@ namespace Solarpunk.Managers
     {
         public const int VictoryTurn = 300;
 
+        /// <summary>Years of a tile's energy flow the stock can hold, before storage research.</summary>
+        public const float BaseStorageYears = 3f;
+
+        /// <summary>The cap never drops below the starting stock, so an empty board doesn't throw it away.</summary>
+        public const float MinEnergyCap = 20f;
+
         [SerializeField] private HexGridManager gridManager;
         [SerializeField] private ResourceManager resourceManager;
         [SerializeField] private CityGrowth cityGrowth;
@@ -26,6 +32,31 @@ namespace Solarpunk.Managers
 
         public int CurrentTurn { get; private set; }
         public event Action<int> OnTurnAdvanced;
+
+        private void Awake() => resourceManager.EnergyCapSource = EnergyCap;
+
+        /// <summary>
+        /// The most energy the stock can hold: every tile's yearly energy, produced or
+        /// consumed, times the years it may be stored (3, raised by storage research).
+        /// A bigger grid gets a bigger buffer, and a balanced one still gets one.
+        /// </summary>
+        public float EnergyCap()
+        {
+            float cap = 0f;
+
+            foreach (HexCell hex in gridManager.Cells.Values)
+            {
+                if (hex.builtTile == null) continue;
+
+                float flow = Mathf.Abs(TileEconomy.PerTurn(hex, cityGrowth, researchManager).energy);
+                float years = BaseStorageYears;
+                if (researchManager != null)
+                    years += researchManager.StorageYears(TileEconomy.Facts(hex.builtTile, hex.cityLevel, hex));
+                cap += flow * years;
+            }
+
+            return Mathf.Max(MinEnergyCap, cap);
+        }
 
         /// <summary>
         /// Levels summed across every city on the board. Research income is priced
@@ -66,8 +97,9 @@ namespace Solarpunk.Managers
                     delta += TileEconomy.PerTurn(pair.Value, cityGrowth, researchManager);
             }
 
-            // Energy Exports: whatever the year produces above what it consumes is sold.
-            if (researchManager != null) delta += researchManager.Export(delta.energy);
+            // Energy Exports: whatever the year would push above the storage cap is sold.
+            if (researchManager != null)
+                delta += researchManager.Export(resourceManager.Current.energy + delta.energy - EnergyCap());
 
             return delta;
         }
